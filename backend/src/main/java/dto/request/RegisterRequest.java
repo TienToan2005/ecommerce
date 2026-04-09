@@ -10,6 +10,6 @@ public record RegisterRequest(
         String fullName,
         String password,
         LocalDate birthday,
-        Address address
+        AddressRequest address
 ) {
 }

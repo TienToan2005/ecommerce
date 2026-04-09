@@ -7,11 +7,17 @@ import enums.ErrorCode;
 import exception.AppException;
 import lombok.RequiredArgsConstructor;
 import mapper.UserMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,34 +27,27 @@ public class UserService {
     private final UserRepository userRepository;
 
     public UserResponse createUser(UserRequest request){
-        User user = userRepository.findUsersByEmailOrPhoneNumber(request.email(),request.phoneNumber())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if(userRepository.existsByEmail(request.email())){
+            throw new AppException(ErrorCode.USER_EXISTS);
+        }
 
-        user.setEmail(request.email());
-        user.setPhoneNumber(request.phoneNumber());
-        user.setPassword(request.password());
-        user.setFullName(request.fullName());
-        user.setBirthday(request.birthday());
-        user.setRole(request.role());
-        user.setAddress(request.address());
-        user.setOrders(request.orderList());
-        user.setCart(request.cart());
+        User user = userMapper.toUser(request);
 
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
-    public List<UserResponse> getAllUser(){
-        List<User> userList = userRepository.findAll();
+    public Page<UserResponse> getAllUser(int page, int size){
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+        Page<User> userList = userRepository.findAll(pageable);
 
-        return userList.stream()
-                .map(userMapper::toUserResponse)
-                .toList();
+        return userList.map(userMapper::toUserResponse);
     }
     public UserResponse getUserById(Long id){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserResponse(user);
     }
+    @Transactional
     public UserResponse updateUser(Long id,  UserRequest request){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -58,12 +57,13 @@ public class UserService {
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
+    @Transactional
     public void deleteUser(Long id){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        userRepository.delete(user);
-
+        user.setDeleteAt(LocalDateTime.now());
+        userRepository.save(user);
     }
     public UserResponse getProfileAndOderHistory(){
         User user = getcurrentUser();

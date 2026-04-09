@@ -8,8 +8,10 @@ import exception.AppException;
 import lombok.RequiredArgsConstructor;
 import mapper.CategoryMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import repository.CategoryRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -22,10 +24,7 @@ public class CategoryService {
         if(categoryRepository.existsCategoryByName(request.name())){
             throw new AppException(ErrorCode.CATEGORY_EXISTS);
         }
-        Category category = new Category();
-        category.setName(request.name());
-        category.setProductList(request.products());
-
+        Category category = categoryMapper.toCategory(request);
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
     public List<CategoryResponse> getALlCategory(){
@@ -39,22 +38,22 @@ public class CategoryService {
 
         return categoryMapper.toCategoryResponse(category);
     }
-    public CategoryResponse updateCategory(Long id,CategoryRequest request){
+    @Transactional
+    public CategoryResponse updateCategory(Long id, CategoryRequest request){
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         category.setName(request.name());
-        category.setProductList(request.products());
         Category saved = categoryRepository.save(category);
 
         return categoryMapper.toCategoryResponse(saved);
     }
-
+    @Transactional
     public void deleteCategory(Long id){
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        categoryRepository.delete(category);
+        category.setDeleteAt(LocalDateTime.now());
     }
 
 }

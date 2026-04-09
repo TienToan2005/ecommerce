@@ -2,7 +2,6 @@ package dto.request;
 
 import entity.Address;
 import entity.Cart;
-import entity.Order;
 import enums.UserRole;
 
 import java.time.LocalDate;
@@ -15,8 +14,8 @@ public record UserRequest(
         String password,
         LocalDate birthday,
         UserRole role,
-        Address address,
-        List<Order> orderList,
-        Cart cart
+        AddressRequest address,
+        List<OrderRequest> orderList,
+        CartRequest cart
 ) {
 }

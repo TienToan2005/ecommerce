@@ -2,13 +2,17 @@ package entity;
 
 import enums.OrderStatus;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "order_items")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,8 +21,6 @@ public class OrderItem {
     private BigDecimal price;
     private int quantity;
     private BigDecimal discount_amount;
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")

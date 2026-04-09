@@ -11,6 +11,7 @@ import org.mapstruct.NullValuePropertyMappingStrategy;
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
     AddressResponse toAddressResponse(Address address);
+    Address toEntity(AddressRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateAddressFromRequest(AddressRequest request,@MappingTarget Address address);
