@@ -6,11 +6,11 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import repository.UserReponsitory;
+import repository.UserRepository;
 
 @RequiredArgsConstructor
 public class UserDetailService implements UserDetailsService {
-    private final UserReponsitory userReponsitory;
+    private final UserRepository userReponsitory;
 
     @Override
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {

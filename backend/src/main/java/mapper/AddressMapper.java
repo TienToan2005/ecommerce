@@ -1,17 +1,17 @@
 package mapper;
 
-import dto.request.UserRequest;
-import dto.response.UserResponse;
-import entity.User;
+import dto.request.AddressRequest;
+import dto.response.AddressResponse;
+import entity.Address;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 @Mapper(componentModel = "spring")
-public interface UserMapper {
-    UserResponse toUserResponse(User user);
+public interface AddressMapper {
+    AddressResponse toAddressResponse(Address address);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateUserFromRequest(UserRequest request, @MappingTarget User user);
+    void updateAddressFromRequest(AddressRequest request,@MappingTarget Address address);
 }

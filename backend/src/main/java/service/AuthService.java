@@ -15,20 +15,20 @@ import lombok.RequiredArgsConstructor;
 import mapper.UserMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import repository.UserReponsitory;
+import repository.UserRepository;
 
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserReponsitory userReponsitory;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
 
     public TokenResponse login(LoginRequest request) {
-        User user = userReponsitory.findUsersByEmailOrPhoneNumber(request.username(), request.username())
+        User user = userRepository.findUsersByEmailOrPhoneNumber(request.username(), request.username())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if(passwordEncoder.matches(request.password(), user.getPassword())){
@@ -46,7 +46,7 @@ public class AuthService {
                 .build();
     }
     public UserResponse register(RegisterRequest request){
-        if(userReponsitory.existsByEmail(request.email())){
+        if(userRepository.existsByEmail(request.email())){
             throw new AppException(ErrorCode.USER_EXISTS);
         }
 
@@ -62,7 +62,7 @@ public class AuthService {
 
         //emailService
 
-        return userMapper.toUserResponse(userReponsitory.save(user));
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     public RefreshTokenResponse refreshToken(String token){

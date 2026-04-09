@@ -1,6 +1,7 @@
 package dto.response;
 
 import entity.Address;
+import entity.Cart;
 import lombok.Builder;
 
 import java.time.LocalDate;
@@ -15,5 +16,6 @@ public class UserResponse {
     private String password;
     private LocalDate birthday;
     private Address address;
-    private List<OrderItemResponse> orderItemResponses;
+    private List<OrderResponse> orderResponseList;
+    private Cart cart;
 }
