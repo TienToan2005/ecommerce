@@ -1,5 +1,6 @@
 package service;
 
+import dto.request.OrderItemRequest;
 import dto.request.OrderRequest;
 import dto.response.OrderResponse;
 import entity.*;
@@ -27,69 +28,72 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserService userService;
     private final AddressRepository addressRepository;
+    private final CartService cartService;
     private final OrderItemRepository orderItemRepository;
 
     @Transactional
-    public OrderResponse createOrder(OrderRequest request){
+    public OrderResponse placeOrder(OrderRequest request) {
         User user = userService.getcurrentUser();
-
-        if (request.orderItemList() == null || request.orderItemList().isEmpty()) {
-            throw new IllegalArgumentException("Order Items cannot be empty");
-        }
-
-        if (request.orderItemList().stream().anyMatch(i -> i.quantity() <= 0)) {
-            throw new IllegalArgumentException("Quantity must be greater than zero");
-        }
 
         Address address = addressRepository.findById(request.addressId())
                 .orElseThrow(() -> new AppException(ErrorCode.ADDRESS_NOT_FOUND));
 
         Order order = Order.builder()
-                .orderNumber("ORD-" + UUID.randomUUID().toString().toUpperCase().substring(0, 5))
+                .orderNumber("ORD-" + UUID.randomUUID().toString().toUpperCase().substring(0, 8))
                 .user(user)
                 .address(address)
+                .status(OrderStatus.PENDING)
                 .build();
-        orderRepository.save(order);
 
-        List<OrderItem> orderItems = request.orderItemList().stream().map(itemRequest -> {
+        List<OrderItem> orderItems = processOrderItems(request.orderItemList(), order);
+        order.setOrderItemList(orderItems);
+
+        BigDecimal grandTotal = orderItems.stream()
+                .map(item -> item.getPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))
+                        .subtract(item.getDiscount_amount() != null ? item.getDiscount_amount() : BigDecimal.ZERO))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        order.setTotalPrice(grandTotal);
+
+        PaymentMethod method = parsePaymentMethod(request.paymentMethod());
+        Payment payment = Payment.builder()
+                .order(order)
+                .amount(grandTotal)
+                .method(method)
+                .status(method == PaymentMethod.COD ? PaymentStatus.PENDING : PaymentStatus.COMPLETED)
+                .build();
+        order.setPayment(payment);
+
+        Order savedOrder = orderRepository.save(order);
+
+        cartService.clearCart(user.getId());
+
+        log.info("Successfully placed order {} for user {}", savedOrder.getOrderNumber(), user.getEmail());
+
+        return orderMapper.toOrderResponse(savedOrder);
+    }
+
+    private List<OrderItem> processOrderItems(List<OrderItemRequest> requests, Order order) {
+        return requests.stream().map(itemRequest -> {
             Product product = productRepository.findById(itemRequest.productId())
                     .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
             if (product.getStock() < itemRequest.quantity()) {
-                throw new IllegalArgumentException("Not enough stock for product: " + product.getName());
+                throw new IllegalArgumentException("Sản phẩm " + product.getName() + " không đủ hàng trong kho");
             }
+
             product.setStock(product.getStock() - itemRequest.quantity());
             productRepository.save(product);
-            //userItemInteractionService.logInteraction(user, product, InteractionType.PURCHASE);
 
             return OrderItem.builder()
                     .order(order)
                     .product(product)
                     .quantity(itemRequest.quantity())
-                    .discount_amount(itemRequest.discount_amount())
                     .price(product.getPrice())
+                    .discount_amount(itemRequest.discount_amount())
                     .build();
         }).toList();
-        orderItemRepository.saveAll(orderItems);
-
-        BigDecimal total = orderItems.stream()
-                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        order.setTotalPrice(total);
-
-        PaymentMethod paymentMethod = parsePaymentMethod(request.paymentMethod());
-        Payment payment = Payment.builder()
-                .oder(order)
-                .amount(order.getTotalPrice())
-                .method(paymentMethod)
-                .status(paymentMethod == PaymentMethod.COD ? PaymentStatus.PENDING : PaymentStatus.COMPLETED)
-                .build();
-        order.setPayment(payment);
-
-        Order saved = orderRepository.save(order);
-        log.info("Order created: {}", saved.getId());
-
-        return orderMapper.toOrderResponse(saved);
     }
     private PaymentMethod parsePaymentMethod(String method){
         if(method == null || method.trim().isEmpty()){

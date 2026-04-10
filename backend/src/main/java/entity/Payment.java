@@ -27,5 +27,5 @@ public class Payment {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
-    private Order oder;
+    private Order order;
 }
