@@ -1,12 +1,16 @@
 package entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "reviews")
-public class Review {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Review  extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -20,7 +20,8 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(1008,HttpStatus.NOT_FOUND,"Order not found"),
     CART_EXISTS(1009,HttpStatus.BAD_REQUEST, "Cart already exists"),
     CART_NOT_FOUND(1010,HttpStatus.NOT_FOUND,"Cart not found"),
-    CART_ITEM_NOT_FOUND(1011,HttpStatus.NOT_FOUND,"Cart item not found");
+    CART_ITEM_NOT_FOUND(1011,HttpStatus.NOT_FOUND,"Cart item not found"),
+    REVIEW_NOT_FOUND(1012,HttpStatus.NOT_FOUND,"Review item not found");
     private int code;
     private HttpStatus status;
     private String message;

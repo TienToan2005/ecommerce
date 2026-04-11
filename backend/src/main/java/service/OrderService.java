@@ -111,7 +111,7 @@ public class OrderService {
         Page<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size));
         return orders.map(orderMapper::toOrderResponse);
     }
-    public Page<OrderResponse> getAllOder(int page, int size){
+    public Page<OrderResponse> getAllOrder(int page, int size){
         Page<Order> orders = orderRepository.findAll(PageRequest.of(page,size));
 
         return orders.map(orderMapper::toOrderResponse);

@@ -27,6 +27,7 @@ public class ProductService {
     private  final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
 
+    @Transactional
     public ProductResponse createProduct(ProductRequest request){
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -83,7 +84,7 @@ public class ProductService {
         return productMapper.toProductResponse(saved);
     }
     @Transactional
-    public void deleteProduct(Long id){
+    public void deleteProductById(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 

@@ -1,5 +1,6 @@
 package service;
 
+import dto.request.CartRequest;
 import dto.response.CartResponse;
 import entity.*;
 import enums.ErrorCode;
@@ -44,8 +45,8 @@ public class CartService {
         return cartMapper.toCartResponse(user.getCart());
     }
     @Transactional
-    public CartResponse addToCart(Long productId, int quantity, Long userId){
-        User user = userRepository.findById(userId)
+    public CartResponse addToCart(CartRequest request){
+        User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Cart cart = user.getCart();
@@ -53,23 +54,23 @@ public class CartService {
             cart = createNewCart(user);
         }
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        if(product.getStock() < quantity){
+        if(product.getStock() < request.quantity()){
             throw new IllegalArgumentException("Not enough stock available");
         }
 
         Optional<CartItem> existingItem = cart.getCartItemList().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
+                .filter(item -> item.getProduct().getId().equals(request.productId()))
                 .findFirst();
         if(existingItem.isPresent()){
             CartItem item = existingItem.get();
-            item.setQuantity(item.getQuantity() + quantity);
+            item.setQuantity(item.getQuantity() + request.quantity());
         }else {
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
-            newItem.setQuantity(quantity);
+            newItem.setQuantity(request.quantity());
             newItem.setProduct(product);
             cart.getCartItemList().add(newItem);
         }
