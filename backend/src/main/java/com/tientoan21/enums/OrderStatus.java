@@ -1,0 +1,10 @@
+package com.tientoan21.enums;
+
+public enum OrderStatus {
+    PENDING,
+    CONFIRMED,
+    SHIPPED,
+    DELIVERED,
+    CANCELLED,
+    RETURNED
+}
