@@ -14,7 +14,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class RefreshTokenService {
-    private RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private static final long REFRESH_TOKEN_EXPIRY_DAYS = 3;
 
     public RefreshToken createRefreshToken(User user){
@@ -23,8 +23,7 @@ public class RefreshTokenService {
         refreshToken.setUser(user);
         refreshToken.setToken(UUID.randomUUID().toString());
         refreshToken.setRevoked(false);
-        refreshToken.setExpiryDate(LocalDate.from(Instant.now().plus(REFRESH_TOKEN_EXPIRY_DAYS, ChronoUnit.DAYS)));
-
+        refreshToken.setExpiryDate(Instant.now().plus(REFRESH_TOKEN_EXPIRY_DAYS, ChronoUnit.DAYS));
         return refreshTokenRepository.save(refreshToken);
     }
     public RefreshToken rotateToken(RefreshToken oldToken){
@@ -44,7 +43,7 @@ public class RefreshTokenService {
         if(refreshToken.isRevoked()) {
             throw new RuntimeException("Refresh token already revoked");
         }
-        if(refreshToken.getExpiryDate().isBefore(LocalDate.now())){
+        if(refreshToken.getExpiryDate().isBefore(Instant.now())){
             throw new RuntimeException("Refresh token expired");
         }
         return  refreshToken;

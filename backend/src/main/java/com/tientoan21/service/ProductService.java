@@ -17,6 +17,7 @@ import com.tientoan21.repository.CategoryRepository;
 import com.tientoan21.repository.ProductRepository;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,15 +31,17 @@ public class ProductService {
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        Product product = new Product();
-
-        product.setName(request.name());
-        product.setPrice(request.price());
-        product.setImages(request.images());
-        product.setStock(request.stock());
+        Product product = productMapper.toProduct(request);
         product.setCategory(category);
-        product.setSpecifications(request.specifications());
-        product.setDescription(request.description());
+
+        if (product.getVariants() != null) {
+            product.getVariants().forEach(variant -> {
+                variant.setProduct(product);
+                if (variant.getSku() == null) {
+                    variant.setSku(generateSku(product.getName(), variant.getAttributes()));
+                }
+            });
+        }
 
         Product saved = productRepository.save(product);
         return productMapper.toProductResponse(saved);
@@ -73,9 +76,20 @@ public class ProductService {
             product.setCategory(category);
         }
 
-        productMapper.updateProductFromRequest(request,product);
-        Product saved = productRepository.save(product);
+        productMapper.updateProductFromRequest(request, product);
 
+        if (request.variants() != null) {
+            product.getVariants().clear(); // Cần cascade = ALL và orphanRemoval = true ở Entity
+            product.getVariants().addAll(
+                    request.variants().stream().map(vReq -> {
+                        var v = productMapper.toProductVariant(vReq);
+                        v.setProduct(product);
+                        return v;
+                    }).toList()
+            );
+        }
+
+        Product saved = productRepository.save(product);
         return productMapper.toProductResponse(saved);
     }
     @Transactional
@@ -84,5 +98,9 @@ public class ProductService {
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
         product.setDeletedAt(LocalDateTime.now());
+    }
+    private String generateSku(String productName, Map<String, String> attributes) {
+        String attrPart = String.join("-", attributes.values());
+        return (productName.substring(0, 3) + "-" + attrPart).toUpperCase().replaceAll("\\s+", "");
     }
 }

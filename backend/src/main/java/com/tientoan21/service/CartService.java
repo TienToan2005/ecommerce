@@ -2,8 +2,11 @@ package com.tientoan21.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
+import com.tientoan21.dto.response.CartItemResponse;
+import com.tientoan21.mapper.CartItemMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,7 @@ public class CartService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
+    private final CartItemMapper cartItemMapper;
 
     public Cart createNewCart(User user) {
         Cart cart = new Cart();
@@ -82,7 +86,16 @@ public class CartService {
 
         return cartMapper.toCartResponse(cartRepository.save(cart));
     }
+    public List<CartItemResponse> getAllItems(Long cartId){
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
+        List<CartItem> items = cart.getCartItemList();
+
+        return items.stream()
+                .map(cartItemMapper::toCartItemResponse)
+                .toList();
+    }
     @Transactional
     public CartResponse updateItemQuantity(Long cartItemId, int newQuantity){
         CartItem item = cartItemRepository.findById(cartItemId)

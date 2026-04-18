@@ -1,19 +1,21 @@
 package com.tientoan21.mapper;
 
 import com.tientoan21.dto.request.ProductRequest;
+import com.tientoan21.dto.request.ProductVariantRequest;
 import com.tientoan21.dto.response.ProductResponse;
 import com.tientoan21.entity.Product;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import com.tientoan21.entity.ProductVariant;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        componentModel = "spring",
+        uses = {CategoryMapper.class},
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface ProductMapper {
     ProductResponse toProductResponse(Product product);
     Product toProduct(ProductRequest request);
-
+    ProductVariant toProductVariant(ProductVariantRequest request);
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "category" , ignore = true)
     void updateProductFromRequest(ProductRequest request, @MappingTarget Product product);

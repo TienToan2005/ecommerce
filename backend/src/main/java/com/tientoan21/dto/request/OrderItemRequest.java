@@ -3,7 +3,7 @@ package com.tientoan21.dto.request;
 import java.math.BigDecimal;
 
 public record OrderItemRequest(
-        Long productId,
+        Long variantId,
         BigDecimal discount_amount,
         Integer quantity
 ) {

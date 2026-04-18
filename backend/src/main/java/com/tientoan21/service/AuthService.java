@@ -31,7 +31,7 @@ public class AuthService {
         User user = userRepository.findUsersByEmailOrPhoneNumber(request.username(), request.username())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if(passwordEncoder.matches(request.password(), user.getPassword())){
+        if(!passwordEncoder.matches(request.password(), user.getPassword())){
             throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Password does not match");
         }
         var accessToken = jwtUtils.generateAccessToken(user);

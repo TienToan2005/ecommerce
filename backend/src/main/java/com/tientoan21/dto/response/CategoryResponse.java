@@ -1,9 +1,11 @@
 package com.tientoan21.dto.response;
 
-import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
 
+@Builder
+@Getter
 public class CategoryResponse {
     private Long id;
     private String name;
-    private List<ProductResponse> productList;
 }

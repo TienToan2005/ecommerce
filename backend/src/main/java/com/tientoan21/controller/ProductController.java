@@ -12,7 +12,7 @@ import com.tientoan21.service.ProductService;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 public class ProductController {
     private final ProductService productService;
 

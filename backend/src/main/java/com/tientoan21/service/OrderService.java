@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.tientoan21.entity.*;
+import com.tientoan21.repository.ProductVariantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -12,12 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tientoan21.dto.request.OrderItemRequest;
 import com.tientoan21.dto.request.OrderRequest;
 import com.tientoan21.dto.response.OrderResponse;
-import com.tientoan21.entity.Address;
-import com.tientoan21.entity.Order;
-import com.tientoan21.entity.OrderItem;
-import com.tientoan21.entity.Payment;
-import com.tientoan21.entity.Product;
-import com.tientoan21.entity.User;
 import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.enums.OrderStatus;
 import com.tientoan21.enums.PaymentMethod;
@@ -42,7 +38,7 @@ public class OrderService {
     private final UserService userService;
     private final AddressRepository addressRepository;
     private final CartService cartService;
-
+    private final ProductVariantRepository productVariantRepository;
     @Transactional
     public OrderResponse placeOrder(OrderRequest request) {
         User user = userService.getcurrentUser();
@@ -88,23 +84,27 @@ public class OrderService {
 
     private List<OrderItem> processOrderItems(List<OrderItemRequest> requests, Order order) {
         return requests.stream().map(itemRequest -> {
-            Product product = productRepository.findById(itemRequest.productId())
-                    .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
 
-            if (product.getStock() < itemRequest.quantity()) {
-                throw new IllegalArgumentException("Sản phẩm " + product.getName() + " không đủ hàng trong kho");
+            ProductVariant variant = productVariantRepository.findById(itemRequest.variantId())
+                    .orElseThrow(() -> new AppException(ErrorCode.VARIANT_NOT_FOUND));
+
+            Product product = variant.getProduct();
+
+            if (variant.getStock() < itemRequest.quantity()) {
+                throw new IllegalArgumentException("Phiên bản " + product.getName() + " (SKU: " + variant.getSku() + ") không đủ hàng trong kho.");
             }
 
-            product.setStock(product.getStock() - itemRequest.quantity());
-            productRepository.save(product);
+            variant.setStock(variant.getStock() - itemRequest.quantity());
+            productVariantRepository.save(variant);
 
             return OrderItem.builder()
                     .order(order)
-                    .product(product)
+                    .productVariant(variant)
                     .quantity(itemRequest.quantity())
-                    .price(product.getPrice())
+                    .price(variant.getPrice())
                     .discount_amount(itemRequest.discount_amount())
                     .build();
+
         }).toList();
     }
     private PaymentMethod parsePaymentMethod(String method){
@@ -175,11 +175,10 @@ public class OrderService {
             order.getPayment().setStatus(PaymentStatus.REFUNDED);
         }
 
-        // return Product
         for(OrderItem item : order.getOrderItemList()){
-            Product product = item.getProduct();
-            product.setStock(product.getStock() + item.getQuantity());
-            productRepository.save(product);
+            ProductVariant variant = item.getProductVariant();
+            variant.setStock(variant.getStock() + item.getQuantity());
+
         }
 
         Order cancelOrderSaved = orderRepository.save(order);

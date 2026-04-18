@@ -3,7 +3,7 @@ package com.tientoan21.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Entity
 @Data
@@ -15,7 +15,7 @@ public class RefreshToken {
 
     private String token;
 
-    private LocalDate expiryDate;;
+    private Instant expiryDate;;
 
     private boolean revoked;
     @ManyToOne

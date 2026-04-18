@@ -7,7 +7,6 @@ import com.tientoan21.dto.response.ReviewResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.*;
 import com.tientoan21.service.ReviewService;
 
@@ -24,7 +23,7 @@ public class ReviewController {
                 .build();
     }
     @GetMapping("/product/{productId}")
-    public ApiResponse<Page<ReviewResponse>> getReviewsByProduct(@PathVariable("productId") Long productId, Pageable pageable){
+    public ApiResponse<Page<ReviewResponse>> getReviewsByProduct(@PathVariable Long productId, Pageable pageable){
         return ApiResponse.<Page<ReviewResponse>>builder()
                 .data(reviewService.getReviewsByProduct(productId, pageable.getPageNumber(), pageable.getPageSize()))
                 .build();
