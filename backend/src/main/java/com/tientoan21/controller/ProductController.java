@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.tientoan21.service.ProductService;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +23,7 @@ public class ProductController {
     private final ProductService productService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> createProduct(
             @RequestPart("data") @Valid ProductRequest request,
             @RequestPart(value = "poster", required = false) MultipartFile poster,
@@ -58,12 +60,14 @@ public class ProductController {
                 .build();
     }
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<ProductResponse> updateProductById(@PathVariable Long id, @RequestBody ProductRequest request){
         return ApiResponse.<ProductResponse>builder()
                 .data(productService.updateProductById(id,request))
                 .build();
     }
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<String> deleteProductById(@PathVariable Long id){
         productService.deleteProductById(id);
         return ApiResponse.<String>builder()

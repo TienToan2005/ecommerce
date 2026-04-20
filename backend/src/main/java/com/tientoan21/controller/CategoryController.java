@@ -5,6 +5,7 @@ import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.CategoryResponse;
 import com.tientoan21.service.CategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<CategoryResponse> create(@RequestBody CategoryRequest request){
         return ApiResponse.<CategoryResponse>builder()
                 .data(categoryService.create(request))
