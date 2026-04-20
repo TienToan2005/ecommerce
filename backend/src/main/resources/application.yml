@@ -16,6 +16,24 @@ spring:
   docker:
     compose:
       enabled: false
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL}
+    password: ${EMAIL_KEY}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION}
+
+vnpay:
+  tmn-code: ${TMN_CODE}
+  hash-secret: ${HASH_SECRET}
+  pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
+  return-url: "http://localhost:5173/vnpay-return"

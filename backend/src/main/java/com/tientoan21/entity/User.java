@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -47,4 +48,5 @@ public class User extends BaseEntity{
     @Builder.Default
     private boolean isEnabled = false;
     private String verificationCode;
+    private LocalDateTime verificationCodeExpiresAt;
 }

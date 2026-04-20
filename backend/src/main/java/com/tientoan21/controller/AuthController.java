@@ -1,7 +1,6 @@
 package com.tientoan21.controller;
 
-import com.tientoan21.dto.request.LoginRequest;
-import com.tientoan21.dto.request.RegisterRequest;
+import com.tientoan21.dto.request.*;
 import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.RefreshTokenResponse;
 import com.tientoan21.dto.response.TokenResponse;
@@ -29,10 +28,34 @@ public class AuthController {
                 .data(authService.register(request))
                 .build();
     }
-    @PostMapping("/refresh")
-    public ApiResponse<RefreshTokenResponse> refresh(@RequestParam String token){
-        return ApiResponse.<RefreshTokenResponse>builder()
-                .data(authService.refreshToken(token))
+    @PostMapping("/verify")
+    public ApiResponse<String> verifyOtp(@RequestBody VerifyAccountRequest request) {
+        authService.verifyAccount(request.email(), request.otp());
+        return ApiResponse.<String>builder()
+                .data("Kích hoạt tài khoản thành công!")
                 .build();
+    }
+    @PostMapping("/refresh")
+    public ApiResponse<RefreshTokenResponse> refresh(@RequestBody @Valid RefreshTokenRequest request){
+        return ApiResponse.<RefreshTokenResponse>builder()
+                .data(authService.refreshToken(request.token()))
+                .build();
+    }
+    @PostMapping("/resend-otp")
+    public ApiResponse<String> resendOtp(@RequestParam String email) {
+        authService.resendOtp(email);
+        return ApiResponse.<String>builder().data("Mã OTP mới đã được gửi!").build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<String> forgotPassword(@RequestParam String email) {
+        authService.forgotPassword(email);
+        return ApiResponse.<String>builder().data("Mã khôi phục đã được gửi tới email của bạn.").build();
+    }
+
+    @PostMapping("/reset-password")
+    public ApiResponse<String> resetPassword(@RequestBody @Valid ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ApiResponse.<String>builder().data("Đổi mật khẩu thành công!").build();
     }
 }

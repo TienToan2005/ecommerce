@@ -22,7 +22,10 @@ public enum ErrorCode {
     CART_NOT_FOUND(1010,HttpStatus.NOT_FOUND,"Cart not found"),
     CART_ITEM_NOT_FOUND(1011,HttpStatus.NOT_FOUND,"Cart item not found"),
     REVIEW_NOT_FOUND(1012,HttpStatus.NOT_FOUND,"Review not found"),
-    VARIANT_NOT_FOUND(1013,HttpStatus.NOT_FOUND,"Variant not found");
+    VARIANT_NOT_FOUND(1013,HttpStatus.NOT_FOUND,"Variant not found"),
+    INVALID_OTP(1014,HttpStatus.BAD_REQUEST,"INVALID_OTP"),
+    USER_ALREADY_VERIFIED(1015,HttpStatus.BAD_REQUEST, "USER_ALREADY_VERIFIED"),
+    OTP_EXPIRED(1016,HttpStatus.BAD_REQUEST,"OTP_EXPIRED");
     private int code;
     private HttpStatus status;
     private String message;

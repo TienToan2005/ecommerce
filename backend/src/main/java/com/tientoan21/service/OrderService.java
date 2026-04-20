@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final ProductRepository productRepository;
+    private final EmailService emailService;
     private final UserService userService;
     private final AddressRepository addressRepository;
     private final CartService cartService;
@@ -155,6 +155,30 @@ public class OrderService {
 
         Order updatedOrder = orderRepository.save(order);
         return orderMapper.toOrderResponse(updatedOrder);
+    }
+    @Transactional
+    public void updatePaymentStatus(Long orderId, PaymentStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getPayment() != null) {
+            order.getPayment().setStatus(newStatus);
+        }
+
+        if (newStatus == PaymentStatus.COMPLETED) {
+            order.setStatus(OrderStatus.CONFIRMED);
+            emailService.sendOrderConfirmationEmail(order);
+
+        } else if (newStatus == PaymentStatus.FAILED) {
+            order.setStatus(OrderStatus.CANCELLED);
+
+            for (OrderItem item : order.getOrderItemList()) {
+                ProductVariant variant = item.getProductVariant();
+                variant.setStock(variant.getStock() + item.getQuantity());
+            }
+        }
+
+        orderRepository.save(order);
     }
     @Transactional
     public OrderResponse cancelOrder(Long id){
