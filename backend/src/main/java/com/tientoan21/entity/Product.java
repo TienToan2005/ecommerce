@@ -28,7 +28,7 @@ public class Product extends BaseEntity {
 
     @ElementCollection
     private List<String> images;
-
+    private String poster;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;

@@ -1,14 +1,19 @@
 package com.tientoan21.controller;
 
+import com.tientoan21.dto.request.FilterProductsRequest;
 import com.tientoan21.dto.request.ProductRequest;
 import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.ProductResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.Param;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import com.tientoan21.service.ProductService;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,16 +21,20 @@ import com.tientoan21.service.ProductService;
 public class ProductController {
     private final ProductService productService;
 
-    @PostMapping
-    public ApiResponse<ProductResponse> createProduct(@RequestBody ProductRequest request){
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ProductResponse> createProduct(
+            @RequestPart("data") @Valid ProductRequest request,
+            @RequestPart(value = "poster", required = false) MultipartFile poster,
+            @RequestPart(value = "images", required = false) List<MultipartFile> images
+    ){
         return ApiResponse.<ProductResponse>builder()
-                .data(productService.createProduct(request))
+                .data(productService.createProduct(request, poster, images))
                 .build();
     }
     @GetMapping
     public ApiResponse<Page<ProductResponse>> getALlProduct(Pageable pageable){
         return ApiResponse.<Page<ProductResponse>>builder()
-                .data(productService.getALlProduct(pageable.getPageNumber(), pageable.getPageSize()))
+                .data(productService.getALlProduct(pageable))
                 .build();
     }
     @GetMapping("/category/{categoryId}")
@@ -33,13 +42,19 @@ public class ProductController {
             @PathVariable("categoryId") Long categoryId,
             Pageable pageable){
         return ApiResponse.<Page<ProductResponse>>builder()
-                .data(productService.getAllProductByCategory(categoryId, pageable.getPageNumber(),pageable.getPageSize()))
+                .data(productService.getAllProductByCategory(categoryId, pageable))
                 .build();
     }
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable Long id){
         return ApiResponse.<ProductResponse>builder()
                 .data(productService.getProductById(id))
+                .build();
+    }
+    @GetMapping("/filter")
+    public ApiResponse<Page<ProductResponse>> filterProducts(@ModelAttribute FilterProductsRequest request, Pageable pageable){
+        return ApiResponse.<Page<ProductResponse>>builder()
+                .data(productService.filterProducts(request, pageable))
                 .build();
     }
     @PutMapping("/{id}")

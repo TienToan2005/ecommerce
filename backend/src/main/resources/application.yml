@@ -37,3 +37,8 @@ vnpay:
   hash-secret: ${HASH_SECRET}
   pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
   return-url: "http://localhost:5173/vnpay-return"
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_NAME}
+  api-key: ${CLOUDINARY_KEY}
+  api-secret: ${CLOUDINARY_SECRET}

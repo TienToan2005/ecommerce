@@ -7,8 +7,12 @@ import com.tientoan21.dto.response.ReviewResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import com.tientoan21.service.ReviewService;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,10 +20,13 @@ import com.tientoan21.service.ReviewService;
 public class ReviewController {
     private final ReviewService reviewService;
 
-    @PostMapping
-    public ApiResponse<ReviewResponse> createReview(@RequestBody ReviewRequest request){
+    @PostMapping(value = "/api/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<ReviewResponse> createReview(
+            @RequestPart("data") ReviewRequest request,
+            @RequestPart(value = "images", required = false) List<MultipartFile> files
+    ){
         return ApiResponse.<ReviewResponse>builder()
-                .data(reviewService.createReview(request))
+                .data(reviewService.createReview(request,files))
                 .build();
     }
     @GetMapping("/product/{productId}")

@@ -31,7 +31,7 @@ public class UserController {
     @GetMapping
     public ApiResponse<Page<UserResponse>> getAllUser(Pageable pageable){
         return ApiResponse.<Page<UserResponse>>builder()
-                .data(userService.getAllUser(pageable.getPageNumber(), pageable.getPageSize()))
+                .data(userService.getAllUser(pageable))
                 .build();
     }
     @GetMapping("/profile")

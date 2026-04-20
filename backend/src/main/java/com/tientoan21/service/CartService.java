@@ -6,23 +6,17 @@ import java.util.List;
 import java.util.Optional;
 
 import com.tientoan21.dto.response.CartItemResponse;
+import com.tientoan21.entity.*;
 import com.tientoan21.mapper.CartItemMapper;
+import com.tientoan21.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.tientoan21.dto.request.CartRequest;
 import com.tientoan21.dto.response.CartResponse;
-import com.tientoan21.entity.Cart;
-import com.tientoan21.entity.CartItem;
-import com.tientoan21.entity.Product;
-import com.tientoan21.entity.User;
 import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.exception.AppException;
 import com.tientoan21.mapper.CartMapper;
-import com.tientoan21.repository.CartItemRepository;
-import com.tientoan21.repository.CartRepository;
-import com.tientoan21.repository.ProductRepository;
-import com.tientoan21.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,7 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class CartService {
     private final CartMapper cartMapper;
     private final CartRepository cartRepository;
-    private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
     private final CartItemMapper cartItemMapper;
@@ -63,15 +57,15 @@ public class CartService {
             cart = createNewCart(user);
         }
 
-        Product product = productRepository.findById(request.productId())
-                .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
+        ProductVariant variant = productVariantRepository.findById(request.variantId())
+                .orElseThrow(() -> new AppException(ErrorCode.VARIANT_NOT_FOUND));
 
-        if(product.getStock() < request.quantity()){
+        if(variant.getStock() < request.quantity()){
             throw new IllegalArgumentException("Not enough stock available");
         }
 
         Optional<CartItem> existingItem = cart.getCartItemList().stream()
-                .filter(item -> item.getProduct().getId().equals(request.productId()))
+                .filter(item -> item.getProductVariant().getId().equals(request.variantId()))
                 .findFirst();
         if(existingItem.isPresent()){
             CartItem item = existingItem.get();
@@ -80,7 +74,7 @@ public class CartService {
             CartItem newItem = new CartItem();
             newItem.setCart(cart);
             newItem.setQuantity(request.quantity());
-            newItem.setProduct(product);
+            newItem.setProductVariant(variant);
             cart.getCartItemList().add(newItem);
         }
 
@@ -127,7 +121,7 @@ public class CartService {
                 .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
 
         return cart.getCartItemList().stream()
-                .map(item -> item.getProduct().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .map(item -> item.getProductVariant().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO,BigDecimal::add);
     }
 }

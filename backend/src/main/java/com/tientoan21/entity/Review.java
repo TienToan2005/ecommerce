@@ -3,6 +3,8 @@ package com.tientoan21.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -17,6 +19,8 @@ public class Review  extends BaseEntity{
 
     private String content;
     private int rating;
+
+    private List<String> images;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

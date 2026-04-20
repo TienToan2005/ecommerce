@@ -8,6 +8,7 @@ import com.tientoan21.entity.*;
 import com.tientoan21.repository.ProductVariantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -118,13 +119,13 @@ public class OrderService {
         }
     }
 
-    public Page<OrderResponse> getUserOrders(int page, int size) {
+    public Page<OrderResponse> getUserOrders(Pageable pageable) {
         User user = userService.getcurrentUser();
-        Page<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), PageRequest.of(page, size));
+        Page<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
         return orders.map(orderMapper::toOrderResponse);
     }
-    public Page<OrderResponse> getAllOrder(int page, int size){
-        Page<Order> orders = orderRepository.findAll(PageRequest.of(page,size));
+    public Page<OrderResponse> getAllOrder(Pageable pageable){
+        Page<Order> orders = orderRepository.findAll(pageable);
 
         return orders.map(orderMapper::toOrderResponse);
     }

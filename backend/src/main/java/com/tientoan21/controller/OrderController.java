@@ -26,13 +26,13 @@ public class OrderController {
     @GetMapping
     public ApiResponse<Page<OrderResponse>> getAllOrder(Pageable pageable){
         return ApiResponse.<Page<OrderResponse>>builder()
-                .data(orderService.getAllOrder(pageable.getPageNumber(), pageable.getPageSize()))
+                .data(orderService.getAllOrder(pageable))
                 .build();
     }
     @GetMapping("/my_order")
     public ApiResponse<Page<OrderResponse>> getUserOrders(Pageable pageable){
         return ApiResponse.<Page<OrderResponse>>builder()
-                .data(orderService.getUserOrders(pageable.getPageNumber(), pageable.getPageSize()))
+                .data(orderService.getUserOrders(pageable))
                 .build();
     }
     @GetMapping("/{id}")

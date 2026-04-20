@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 
 public record CartRequest(
-        @NotBlank(message = "productId cannot null")
-        Long productId,
+        @NotBlank(message = "variantId cannot null")
+        Long variantId,
 
         @Min(value = 1, message = "Quantity must be greater than 0")
         int quantity,

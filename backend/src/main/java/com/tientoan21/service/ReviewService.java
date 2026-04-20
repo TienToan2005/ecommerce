@@ -6,8 +6,10 @@ import com.tientoan21.entity.Product;
 import com.tientoan21.entity.Review;
 import com.tientoan21.entity.User;
 import com.tientoan21.enums.ErrorCode;
+import com.tientoan21.enums.OrderStatus;
 import com.tientoan21.enums.UserRole;
 import com.tientoan21.exception.AppException;
+import com.tientoan21.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import com.tientoan21.mapper.ReviewMapper;
 import org.springframework.data.domain.Page;
@@ -16,8 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.tientoan21.repository.ProductRepository;
 import com.tientoan21.repository.ReviewRepository;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,18 +31,24 @@ public class ReviewService {
     private final ReviewMapper reviewMapper;
     private final UserService userService;
     private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
+    private final FileUploadService fileUploadService;
+
     @Transactional
-    public ReviewResponse createReview(ReviewRequest request){
+    public ReviewResponse createReview(ReviewRequest request, List<MultipartFile> files){
         User user = userService.getcurrentUser();
 
         Product product = getProductByIdOrThrow(request.productId());
 
         validateCreateReview(user.getId(), product.getId(), request.rating());
 
+        List<String> imageUrls = (files != null) ? fileUploadService.uploadMultipleFiles(files) : new ArrayList<>();
+
         Review review = Review.builder()
                 .content(request.content())
                 .rating(request.rating())
                 .product(product)
+                .images(imageUrls)
                 .user(user)
                 .build();
         Review saved = reviewRepository.save(review);
@@ -113,6 +124,10 @@ public class ReviewService {
 
         if (reviewRepository.existsByUserIdAndProductId(userId, productId)) {
             throw new IllegalStateException("You have already reviewed this product");
+        }
+        boolean hasPurchased = orderRepository.hasUserPurchasedProduct(userId, productId, OrderStatus.DELIVERED);
+        if (!hasPurchased) {
+            throw new IllegalArgumentException("You must successfully purchase and receive this product to leave a review.");
         }
     }
     private void validateReviewPermission(Review review, User currentUser) {

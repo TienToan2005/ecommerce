@@ -35,8 +35,7 @@ public class UserService {
         User saved = userRepository.save(user);
         return userMapper.toUserResponse(saved);
     }
-    public Page<UserResponse> getAllUser(int page, int size){
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdDate").descending());
+    public Page<UserResponse> getAllUser(Pageable pageable){
         Page<User> userList = userRepository.findAll(pageable);
 
         return userList.map(userMapper::toUserResponse);
