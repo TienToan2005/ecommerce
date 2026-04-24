@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Formula;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -42,13 +43,9 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL,orphanRemoval = true)
     private List<ProductVariant> variants = new ArrayList<>();
 
-    public void addVariant(ProductVariant variant) {
-        variants.add(variant);
-        variant.setProduct(this);
-    }
+    @Formula("(SELECT COALESCE(AVG(r.rating), 0.0) FROM reviews r WHERE r.product_id = id AND r.deleted_at IS NULL)")
+    private Double averageRating;
 
-    public void removeVariant(ProductVariant variant) {
-        variants.remove(variant);
-        variant.setProduct(null);
-    }
+    @Formula("(SELECT COUNT(*) FROM reviews r WHERE r.product_id = id AND r.deleted_at IS NULL)")
+    private Integer totalReviews;
 }

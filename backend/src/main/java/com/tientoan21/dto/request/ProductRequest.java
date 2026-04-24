@@ -9,6 +9,7 @@ import java.util.Map;
 public record ProductRequest(
          @NotBlank(message = "Name is required")
          String name,
+         String poster,
          List<String> images,
          String description,
          @NotNull(message = "productId cannot null")

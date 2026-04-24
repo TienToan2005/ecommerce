@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -26,7 +27,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                                     @Param("productId") Long productId,
                                     @Param("status") OrderStatus status);
 
-    @Query("select sum(o.totalPrice) from Order o where o.status == 'DELIVERED' ")
+    @Query("select sum(o.totalPrice) from Order o where o.status = 'DELIVERED' ")
     BigDecimal calculateTotalRevenue();
 
     long countByStatus(OrderStatus status);
@@ -46,4 +47,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "group by v.product.name, v.product.id " +
             "order by totalSold desc ")
     List<Object[]> getTopSellingProducts(Pageable pageable);
+
+    Optional<Order> findByOrderNumber(String orderNumber);
 }

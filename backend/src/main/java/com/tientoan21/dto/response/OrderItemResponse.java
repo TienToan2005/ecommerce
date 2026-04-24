@@ -1,17 +1,19 @@
 package com.tientoan21.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.math.BigDecimal;
 
-@Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class OrderItemResponse {
     private  Long id;
     private BigDecimal price;
     private int quantity;
     private BigDecimal discount_amount;
-    private Long orderId;
-    private Long productId;
+    private ProductResponse product;
+    private ProductVariantResponse variant;
 }

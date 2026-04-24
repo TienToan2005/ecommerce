@@ -8,14 +8,14 @@ public class ProductSpecification {
     public static Specification<Product> hasName(String name){
         return (root, query, builder) -> {
             if (name == null || name.isEmpty()) return null;
-
-            return builder.like(builder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+            String searchKeyword = "%" + name.trim().toLowerCase().replaceAll("\\s+", "%") + "%";
+            return builder.like(builder.lower(root.get("name")), searchKeyword);
         };
     }
     public static Specification<Product> hasPriceBetween(Double minPrice, Double maxPrice){
         return (root, query, builder) -> {
             if(minPrice == null && maxPrice == null) return null;
-            if(minPrice != null && maxPrice == null){
+            if(minPrice != null   && maxPrice == null){
                 return builder.greaterThanOrEqualTo(root.get("price"), minPrice);
             }
             if(minPrice == null && maxPrice != null){

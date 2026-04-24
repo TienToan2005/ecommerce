@@ -9,13 +9,14 @@ import org.mapstruct.*;
 
 @Mapper(
         componentModel = "spring",
-        uses = {CategoryMapper.class},
+        uses = {CategoryMapper.class, ProductVariantMapper.class},
         unmappedTargetPolicy = ReportingPolicy.IGNORE
 )
 public interface ProductMapper {
     ProductResponse toProductResponse(Product product);
     Product toProduct(ProductRequest request);
     ProductVariant toProductVariant(ProductVariantRequest request);
+
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "category" , ignore = true)
     void updateProductFromRequest(ProductRequest request, @MappingTarget Product product);

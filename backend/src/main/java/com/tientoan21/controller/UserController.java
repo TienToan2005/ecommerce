@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.tientoan21.service.UserService;
 
 @RestController
-@RequestMapping("api/user")
+@RequestMapping("api/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -39,11 +39,10 @@ public class UserController {
                 .build();
     }
     @GetMapping("/profile")
-    public ApiResponse<UserResponse> getProfileAndOderHistory(){
+    public ApiResponse<UserResponse> getProfile() {
         return ApiResponse.<UserResponse>builder()
-                .data(userService.getProfileAndOderHistory())
+                .data(userService.getMyProfile())
                 .build();
-
     }
     @PostMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

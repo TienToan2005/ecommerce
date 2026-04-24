@@ -1,13 +1,16 @@
 package com.tientoan21.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 
 import java.util.List;
 import java.util.Map;
 
-@Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ProductResponse {
     private Long id;
     private String name;
@@ -15,5 +18,10 @@ public class ProductResponse {
     private String description;
     private CategoryResponse category;
     private Map<String, String> specifications;
-    private ProductVariantResponse productVariantResponse;
+
+    @JsonIgnoreProperties("product")
+    private List<ProductVariantResponse> variants;
+
+    private Double averageRating;
+    private Integer totalReviews;
 }

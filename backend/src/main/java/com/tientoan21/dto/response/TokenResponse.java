@@ -1,10 +1,12 @@
 package com.tientoan21.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
-@Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class TokenResponse {
     private String accessToken;
     private String refreshToken;

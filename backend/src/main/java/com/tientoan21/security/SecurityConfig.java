@@ -30,8 +30,12 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/*").permitAll()
-                        .requestMatchers("/api/auth/*","/api/category/*", "/api/product/*", "/api/order/*").permitAll()
-                        .requestMatchers("/api/user/*").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/api/categories", "/api/categories/**",
+                                "/api/products", "/api/products/**",
+                                "/api/orders", "/api/orders/**"
+                        ).permitAll()
+                        .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

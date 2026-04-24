@@ -1,11 +1,18 @@
 package com.tientoan21.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
 
-@Builder
+import java.math.BigDecimal;
+
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ProductVariantResponse {
+    private Long id;
+    private BigDecimal price;
+    private int stock;
+    private String sku;
 }

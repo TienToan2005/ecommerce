@@ -32,7 +32,7 @@ public class ProductService {
     private  final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
     private final FileUploadService fileUploadService;
-
+    private final ReviewService reviewService;
     @Transactional
     public ProductResponse createProduct(ProductRequest request, MultipartFile poster, List<MultipartFile> images){
         Category category = categoryRepository.findById(request.categoryId())
@@ -63,17 +63,6 @@ public class ProductService {
 
         Product saved = productRepository.save(product);
         return productMapper.toProductResponse(saved);
-    }
-    public Page<ProductResponse> getALlProduct(Pageable pageable){
-        Page<Product> products = productRepository.findAll(pageable);
-
-        return products.map(productMapper::toProductResponse);
-
-    }
-    public Page<ProductResponse> getAllProductByCategory(Long categoryId, Pageable pageable){
-        Page<Product> productPage = productRepository.findAllByCategoryId(categoryId, pageable);
-
-        return productPage.map(productMapper::toProductResponse);
     }
     public ProductResponse getProductById(Long id){
         Product product = productRepository.findById(id)

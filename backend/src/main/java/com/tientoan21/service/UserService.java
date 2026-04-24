@@ -63,9 +63,8 @@ public class UserService {
         user.setDeletedAt(LocalDateTime.now());
         userRepository.save(user);
     }
-    public UserResponse getProfileAndOderHistory(){
+    public UserResponse getMyProfile(){
         User user = getcurrentUser();
-
         return userMapper.toUserResponse(user);
     }
 

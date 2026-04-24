@@ -1,13 +1,15 @@
 package com.tientoan21.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
-@Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CartResponse {
     private Long id;
     private Long userId;
-    private List<CartItemResponse> itemResponseList;
+    private List<CartItemResponse> cartItemList;
 }

@@ -1,9 +1,7 @@
 package com.tientoan21.controller;
 
-import com.tientoan21.dto.response.ApiResponse;
-import com.tientoan21.dto.response.DashboardStatsDTO;
-import com.tientoan21.dto.response.MonthlyRevenueDTO;
-import com.tientoan21.dto.response.TopProductDTO;
+import com.tientoan21.dto.response.*;
+import com.tientoan21.entity.ProductVariant;
 import com.tientoan21.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +19,6 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/stats")
     public ApiResponse<DashboardStatsDTO> getStats() {
         return ApiResponse.<DashboardStatsDTO>builder()
@@ -29,7 +26,6 @@ public class DashboardController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/revenue-chart")
     public ApiResponse<List<MonthlyRevenueDTO>> getRevenueChart(@RequestParam(defaultValue = "2024") int year) {
         return ApiResponse.<List<MonthlyRevenueDTO>>builder()
@@ -37,11 +33,16 @@ public class DashboardController {
                 .build();
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/top-selling")
     public ApiResponse<List<TopProductDTO>> getTopSellingProducts(){
         return ApiResponse.<List<TopProductDTO>>builder()
                 .data(dashboardService.getTopSellingProducts())
+                .build();
+    }
+    @GetMapping("/low-stock")
+    public ApiResponse<List<ProductVariantResponse>> getLowStock(){
+        return ApiResponse.<List<ProductVariantResponse>>builder()
+                .data(dashboardService.getLowStock())
                 .build();
     }
 }

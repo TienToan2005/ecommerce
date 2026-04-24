@@ -1,10 +1,13 @@
 package com.tientoan21.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "cartItems")
 public class CartItem {
     @Id

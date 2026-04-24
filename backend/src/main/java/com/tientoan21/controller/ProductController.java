@@ -33,28 +33,15 @@ public class ProductController {
                 .data(productService.createProduct(request, poster, images))
                 .build();
     }
-    @GetMapping
-    public ApiResponse<Page<ProductResponse>> getALlProduct(Pageable pageable){
-        return ApiResponse.<Page<ProductResponse>>builder()
-                .data(productService.getALlProduct(pageable))
-                .build();
-    }
-    @GetMapping("/category/{categoryId}")
-    public ApiResponse<Page<ProductResponse>> getAllProductByCategory(
-            @PathVariable("categoryId") Long categoryId,
-            Pageable pageable){
-        return ApiResponse.<Page<ProductResponse>>builder()
-                .data(productService.getAllProductByCategory(categoryId, pageable))
-                .build();
-    }
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getProductById(@PathVariable Long id){
+
         return ApiResponse.<ProductResponse>builder()
                 .data(productService.getProductById(id))
                 .build();
     }
-    @GetMapping("/filter")
-    public ApiResponse<Page<ProductResponse>> filterProducts(@ModelAttribute FilterProductsRequest request, Pageable pageable){
+    @GetMapping
+    public ApiResponse<Page<ProductResponse>> getProducts(@ModelAttribute FilterProductsRequest request, Pageable pageable){
         return ApiResponse.<Page<ProductResponse>>builder()
                 .data(productService.filterProducts(request, pageable))
                 .build();

@@ -28,31 +28,19 @@ public class CartService {
     private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
-    private final CartItemMapper cartItemMapper;
+    private final UserService userService;
 
     public Cart createNewCart(User user) {
         Cart cart = new Cart();
         cart.setUser(user);
         return cartRepository.save(cart);
     }
-
-    public CartResponse getCartByUserId(Long userId){
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        if(user.getCart() == null){
-            Cart cart = createNewCart(user);
-            return cartMapper.toCartResponse(cart);
-        }
-
-        return cartMapper.toCartResponse(user.getCart());
-    }
     @Transactional
     public CartResponse addToCart(CartRequest request){
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Cart cart = user.getCart();
+        Cart cart = cartRepository.findCartByUserId(user.getId()).orElse(null);
         if (cart == null) {
             cart = createNewCart(user);
         }
@@ -80,15 +68,16 @@ public class CartService {
 
         return cartMapper.toCartResponse(cartRepository.save(cart));
     }
-    public List<CartItemResponse> getAllItems(Long cartId){
-        Cart cart = cartRepository.findById(cartId)
-                .orElseThrow(() -> new AppException(ErrorCode.CART_NOT_FOUND));
+    public CartResponse getCartForCurrentUser() {
+        User user = userService.getcurrentUser();
 
-        List<CartItem> items = cart.getCartItemList();
+        Cart cart = cartRepository.findCartByUserId(user.getId()).orElse(null);
 
-        return items.stream()
-                .map(cartItemMapper::toCartItemResponse)
-                .toList();
+        if (cart == null) {
+            cart = createNewCart(user);
+            return cartMapper.toCartResponse(cart);
+        }
+        return cartMapper.toCartResponse(cart);
     }
     @Transactional
     public CartResponse updateItemQuantity(Long cartItemId, int newQuantity){
@@ -124,4 +113,15 @@ public class CartService {
                 .map(item -> item.getProductVariant().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO,BigDecimal::add);
     }
+    @Transactional
+    public void deleteCartItem(Long cartItemId){
+        CartItem item = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new AppException(ErrorCode.CART_ITEM_NOT_FOUND));
+
+        Cart cart = item.getCart();
+
+        cartItemRepository.delete(item);
+        cartRepository.save(cart);
+    }
+
 }

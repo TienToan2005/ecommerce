@@ -18,28 +18,24 @@ import java.util.List;
 public class CartController {
     private final CartService cartService;
 
-    @PostMapping
+    @PostMapping("/add")
     public ApiResponse<CartResponse> addToCart(@RequestBody @Valid CartRequest request){
         return ApiResponse.<CartResponse>builder()
                 .data(cartService.addToCart(request))
                 .build();
     }
-    @GetMapping("/user/{userId}")
-    public ApiResponse<CartResponse> getCartByUserId(@PathVariable Long userId){
+    @GetMapping("/my-cart")
+    public ApiResponse<CartResponse> getMyCart() {
         return ApiResponse.<CartResponse>builder()
-                .data(cartService.getCartByUserId(userId))
+                .data(cartService.getCartForCurrentUser())
                 .build();
     }
-    @GetMapping("/{id}/items")
-    public ApiResponse<List<CartItemResponse>> getCartItems(@PathVariable Long id){
-        return ApiResponse.<List<CartItemResponse>>builder()
-                .data(cartService.getAllItems(id))
-                .build();
-    }
-    @PutMapping("/{id}")
-    public ApiResponse<CartResponse> updateItemQuantity(@RequestBody UpdateQuantityRequest request, @PathVariable Long id){
+    @PutMapping("/items/{cartItemId}")
+    public ApiResponse<CartResponse> updateQuantity(
+            @PathVariable Long cartItemId,
+            @RequestBody UpdateQuantityRequest request) {
         return ApiResponse.<CartResponse>builder()
-                .data(cartService.updateItemQuantity(id,request.quantity()))
+                .data(cartService.updateItemQuantity(cartItemId, request.quantity()))
                 .build();
     }
     @DeleteMapping("/user/{userId}")
@@ -47,6 +43,13 @@ public class CartController {
         cartService.clearCart(userId);
         return ApiResponse.<String>builder()
                 .data("Đã xóa giỏ hàng thành công")
+                .build();
+    }
+    @DeleteMapping("/items")
+    public ApiResponse<String> deleteCartItem(@PathVariable Long cartItemId){
+        cartService.deleteCartItem(cartItemId);
+        return ApiResponse.<String>builder()
+                .data("Đã xóa sản phẩm trong giỏ thành công")
                 .build();
     }
 }

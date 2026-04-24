@@ -8,7 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record OrderRequest(
-        @NotNull(message = "Address ID is required")
+        @NotNull(message = " ID user is required")
+        Long userId,
+        @NotNull(message = " ID address is required")
          Long addressId,
         @NotBlank(message = "Payment method is required")
          String paymentMethod,

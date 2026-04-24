@@ -1,13 +1,15 @@
 package com.tientoan21.dto.response;
 
 import com.tientoan21.enums.UserRole;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDate;
 
-@Builder
 @Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class UserResponse {
     private Long id;
     private String fullName;

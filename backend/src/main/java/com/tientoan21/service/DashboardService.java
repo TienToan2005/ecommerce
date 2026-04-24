@@ -1,10 +1,15 @@
 package com.tientoan21.service;
 
+
 import com.tientoan21.dto.response.DashboardStatsDTO;
 import com.tientoan21.dto.response.MonthlyRevenueDTO;
+import com.tientoan21.dto.response.ProductVariantResponse;
 import com.tientoan21.dto.response.TopProductDTO;
+import com.tientoan21.entity.ProductVariant;
 import com.tientoan21.enums.OrderStatus;
+import com.tientoan21.mapper.ProductVariantMapper;
 import com.tientoan21.repository.OrderRepository;
+import com.tientoan21.repository.ProductVariantRepository;
 import com.tientoan21.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -20,6 +25,8 @@ import java.util.List;
 public class DashboardService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final ProductVariantRepository productVariantRepository;
+    private final ProductVariantMapper productVariantMapper;
 
     @Transactional(readOnly = true)
     public DashboardStatsDTO getOverviewStats(){
@@ -57,5 +64,13 @@ public class DashboardService {
             topProducts.add(new TopProductDTO(name, totalSold, totalRevenue));
         }
         return topProducts;
+    }
+
+    public List<ProductVariantResponse> getLowStock(){
+        List<ProductVariant> variantList = productVariantRepository.findAllLowStock();
+
+        return variantList.stream()
+                .map(productVariantMapper::toProductVariantResponse)
+                .toList();
     }
 }

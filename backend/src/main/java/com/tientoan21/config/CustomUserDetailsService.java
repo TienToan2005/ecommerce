@@ -13,11 +13,11 @@ import com.tientoan21.repository.UserRepository;
 @RequiredArgsConstructor
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
-    private final UserRepository userReponsitory;
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
-        User user = userReponsitory.findUsersByEmailOrPhoneNumber(username, username)
+        User user = userRepository.findUsersByEmailOrPhoneNumber(username, username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with: " + username));
 
         return new UserDetail(
