@@ -1,6 +1,9 @@
 import { create } from 'zustand';
+import axios from 'axios';
+import toast from 'react-hot-toast';
 import * as userApi from '../services/user';
 import type { LoginRequest, UserResponse } from '../types/user';
+import { useCartStore } from './useCartStore';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -29,34 +32,54 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginAction: async (data: LoginRequest) => {
     set({ loading: true, error: null });
     try {
-      const result = await userApi.loginUser(data); // Gọi hàm loginUser của bạn
+      const result = await userApi.loginUser(data);
       localStorage.setItem('accessToken', result.accessToken);
       localStorage.setItem('refreshToken', result.refreshToken);
       
-      // Sau khi lấy được token, gọi API lấy profile để lưu thông tin user
-      const userProfile = await userApi.getProfileAndOderHistory();
+      useCartStore.getState().clearCartUI();
+
+      const userProfile = await userApi.getProfile();
       
-      set({ isAuthenticated: true, user: userProfile, isAuthModalOpen: false });
-    } catch (err: any) {
-      set({ error: err.response?.data?.message || 'Tài khoản hoặc mật khẩu không chính xác!' });
-      throw err;
-    } finally {
+      set({ 
+        isAuthenticated: true, 
+        user: userProfile, 
+        isAuthModalOpen: false, 
+        loading: false 
+      });
+
+      useCartStore.getState().fetchCart();
+      
+      toast.success('Đăng nhập thành công!');
+
+    } catch (error: unknown) {
       set({ loading: false });
+      if (axios.isAxiosError(error)) {
+          toast.error(error.response?.data?.message || 'Lỗi mạng hoặc sai tài khoản!');
+      } else if (error instanceof Error) {
+          toast.error(error.message);
+      } else {
+          toast.error('Đã xảy ra lỗi không xác định!');
+      }
     }
   },
 
   logout: () => {
+    set({ isAuthenticated: false, user: null });
+    useCartStore.getState().clearCartDB();
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
-    set({ isAuthenticated: false, user: null });
+    toast.success('Đã đăng xuất!');
   },
 
   checkAuth: async () => {
     const token = localStorage.getItem('accessToken');
     if (token) {
       try {
-        const userProfile = await userApi.getProfileAndOderHistory(); // Lấy profile của bạn
+        const userProfile = await userApi.getProfile();
         set({ isAuthenticated: true, user: userProfile });
+        
+        useCartStore.getState().fetchCart();
+
       } catch {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');

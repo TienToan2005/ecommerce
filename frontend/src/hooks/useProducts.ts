@@ -13,16 +13,14 @@ export const useProducts = (initialParams: productApi.ProductQueryParams = {}, c
       try {
         setLoading(true);
         setError(null);
+
+        const res = await productApi.getAllProducts({
+          ...initialParams,
+          categoryId: categoryId || undefined
+        });
+
+        setData(res);
         
-        // Nếu có truyền categoryId thì gọi API lọc theo danh mục, ngược lại gọi API lấy tất cả
-        let result;
-        if (categoryId) {
-          result = await productApi.getAllProductsByCategory(categoryId, initialParams);
-        } else {
-          result = await productApi.getAllProducts(initialParams);
-        }
-        
-        setData(result);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Có lỗi xảy ra khi tải sản phẩm');
       } finally {
@@ -31,7 +29,7 @@ export const useProducts = (initialParams: productApi.ProductQueryParams = {}, c
     };
 
     fetchProducts();
-  }, [JSON.stringify(initialParams), categoryId]); // Re-fetch khi params hoặc danh mục thay đổi
+  }, [JSON.stringify(initialParams), categoryId]);
 
   return { data, loading, error };
 };

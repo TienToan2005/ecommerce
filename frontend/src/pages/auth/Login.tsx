@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import LoginForm from '../../components/auth/LoginForm';
 
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuthStore();
 
-  // Nếu người dùng đã đăng nhập rồi mà cố tình vào lại trang /login, đẩy họ về Trang chủ
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');

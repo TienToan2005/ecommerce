@@ -1,6 +1,7 @@
 package com.tientoan21.entity;
 
 import com.tientoan21.enums.UserRole;
+import com.tientoan21.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,7 +34,13 @@ public class User extends BaseEntity{
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private UserRole role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
 
     private LocalDate birthday;
 

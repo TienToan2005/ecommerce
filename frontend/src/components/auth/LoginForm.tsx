@@ -3,7 +3,7 @@ import { useAuthStore } from '../../hooks/useAuthStore';
 import toast from 'react-hot-toast';
 
 interface LoginFormProps {
-  onSuccess?: () => void; // Hàm callback được gọi khi login thành công
+  onSuccess?: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
@@ -16,7 +16,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     try {
       await loginAction({ username, password });
       toast.success('Đăng nhập thành công!');
-      if (onSuccess) onSuccess(); // Báo cho Component cha biết là đã xong
+      if (onSuccess) onSuccess();
     } catch (err) {
       // Lỗi đã được xử lý trong useAuthStore, chỉ cần catch để không bị crash
     }

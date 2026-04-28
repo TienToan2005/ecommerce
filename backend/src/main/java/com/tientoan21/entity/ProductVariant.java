@@ -1,10 +1,8 @@
 package com.tientoan21.entity;
 
+import com.tientoan21.enums.ProductStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -12,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+@Builder
 @Entity
 @Table(name = "product_variants")
 @Getter
@@ -26,6 +25,11 @@ public class ProductVariant extends BaseEntity {
     private String sku;
     private BigDecimal price;
     private int stock;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private ProductStatus status = ProductStatus.ACTIVE;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "attributes", columnDefinition = "json")

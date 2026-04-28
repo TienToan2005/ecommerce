@@ -26,12 +26,6 @@ public class OrderController {
                 .data(orderService.placeOrder(request,httpServletRequest))
                 .build();
     }
-    @GetMapping
-    public ApiResponse<Page<OrderResponse>> getAllOrder(Pageable pageable){
-        return ApiResponse.<Page<OrderResponse>>builder()
-                .data(orderService.getAllOrder(pageable))
-                .build();
-    }
     @GetMapping("/my_order")
     public ApiResponse<Page<OrderResponse>> getUserOrders(
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -43,12 +37,6 @@ public class OrderController {
     public ApiResponse<OrderResponse> getOrderById(@PathVariable Long id){
         return ApiResponse.<OrderResponse>builder()
                 .data(orderService.getOrderById(id))
-                .build();
-    }
-    @PutMapping("/{id}")
-    public ApiResponse<OrderResponse> updateOrderStatus(@PathVariable Long id, @RequestBody UpdateOrderStatus request){
-        return ApiResponse.<OrderResponse>builder()
-                .data(orderService.updateOrderStatus(id,request.status()))
                 .build();
     }
     @DeleteMapping("/{id}")

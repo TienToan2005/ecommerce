@@ -25,10 +25,12 @@ export interface UserRequest {
     phoneNumber: string;
     password?: string;
     role?: string;
+    address?: string;
     birthday?: string;
 }
 
 export interface UserResponse extends UserRequest {
     id?: number;
     role: string;
+    createdAt?: Date;
 }

@@ -1,20 +1,23 @@
-import type {ProductResponse} from './product';
+import type { ProductResponse, ProductVariantResponse } from "./product";
 
 export interface CartRequest {
-    productId: number;
     userId: number;
+    variantId: number;
     quantity: number;
 }
-export interface CartResponse {
-    id:number;
-    userId: number;
-    itemList?: CartItemResponse[];
-}
+
 export interface CartItemResponse {
     id: number;
     quantity: number;
-    product :ProductResponse;
+    product: ProductResponse; 
+    variant: ProductVariantResponse;
 }
+
+export interface CartResponse {
+    id: number;
+    cartItemList: CartItemResponse[];
+}
+
 export interface UpdateQuantityRequest {
     quantity: number;
 }

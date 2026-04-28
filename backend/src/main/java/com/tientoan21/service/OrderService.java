@@ -13,7 +13,6 @@ import com.tientoan21.entity.*;
 import com.tientoan21.repository.ProductVariantRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +29,6 @@ import com.tientoan21.exception.AppException;
 import com.tientoan21.mapper.OrderMapper;
 import com.tientoan21.repository.AddressRepository;
 import com.tientoan21.repository.OrderRepository;
-import com.tientoan21.repository.ProductRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -145,11 +143,6 @@ public class OrderService {
         Page<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
         return orders.map(orderMapper::toOrderResponse);
     }
-    public Page<OrderResponse> getAllOrder(Pageable pageable){
-        Page<Order> orders = orderRepository.findAll(pageable);
-
-        return orders.map(orderMapper::toOrderResponse);
-    }
     public OrderResponse getOrderById(Long id){
         User user = userService.getcurrentUser();
         Order order = orderRepository.findById(id)
@@ -160,23 +153,6 @@ public class OrderService {
         }
 
         return orderMapper.toOrderResponse(order);
-    }
-    @Transactional
-    public OrderResponse updateOrderStatus(Long id, String status){
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
-        if (status == null) {
-            throw new IllegalArgumentException("OrderStatus is required");
-        }
-        OrderStatus statusEnum = OrderStatus.valueOf(status.toUpperCase());
-        order.setStatus(statusEnum);
-
-        if (statusEnum == OrderStatus.DELIVERED && order.getPayment().getMethod() == PaymentMethod.COD) {
-            order.getPayment().setStatus(PaymentStatus.COMPLETED);
-        }
-
-        Order updatedOrder = orderRepository.save(order);
-        return orderMapper.toOrderResponse(updatedOrder);
     }
     @Transactional
     public void updatePaymentStatus(Long orderId, PaymentStatus newStatus) {

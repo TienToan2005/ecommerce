@@ -1,10 +1,8 @@
 package com.tientoan21.entity;
 
+import com.tientoan21.enums.ProductStatus;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.Formula;
 
 import java.math.BigDecimal;
@@ -13,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Builder
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data

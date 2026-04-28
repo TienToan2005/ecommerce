@@ -1,6 +1,7 @@
 package com.tientoan21.dto.response;
 
 import com.tientoan21.enums.UserRole;
+import com.tientoan21.enums.UserStatus;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -17,5 +18,6 @@ public class UserResponse {
     private String phoneNumber;
     private String password;
     private UserRole role;
+    private UserStatus status;
     private LocalDate birthday;
 }

@@ -1,7 +1,6 @@
 package com.tientoan21.controller;
 
 import com.tientoan21.dto.response.*;
-import com.tientoan21.entity.ProductVariant;
 import com.tientoan21.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,6 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/dashboard")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
 
     private final DashboardService dashboardService;

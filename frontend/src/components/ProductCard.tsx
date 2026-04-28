@@ -1,28 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart } from 'lucide-react';
+import { Star } from 'lucide-react'; // Đổi sang dùng icon Star
 import type { ProductResponse } from '../types/product';
-import { useCartStore } from '../hooks/useCartStore';
 import { formatCurrency } from '../utils/format';
-import toast from 'react-hot-toast';
 
 interface Props {
   product: ProductResponse;
 }
 
 const ProductCard: React.FC<Props> = ({ product }) => {
-  const addToCart = useCartStore(state => state.addToCart);
+  const defaultVariant = product.variants?.[0] || null;
+  const displayPrice = defaultVariant?.price || 0;
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Ngăn không cho Link chuyển trang khi bấm nút "Thêm vào giỏ"
-    addToCart(product, 1);
-    toast.success(`Đã thêm ${product.name} vào giỏ hàng!`);
-  };
+  const avgRating = product.averageRating || 0;
+  const totalReviews = product.totalReviews || 0;
 
-  // Backend của bạn trả về images là mảng List<String>, ta lấy ảnh đầu tiên để hiển thị
-  const thumbnail = product.images && product.images.length > 0 
-    ? product.images[0] 
-    : 'https://via.placeholder.com/300';
+  const thumbnail = product.poster 
+    ? product.poster 
+    : (product.images && product.images.length > 0 ? product.images[0] : 'https://dummyimage.com/300x300/f3f4f6/9ca3af.png&text=No+Image');
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-lg transition-shadow duration-300 flex flex-col h-full group relative">
@@ -33,6 +28,7 @@ const ProductCard: React.FC<Props> = ({ product }) => {
           src={thumbnail} 
           alt={product.name} 
           className="absolute inset-0 w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
+          onError={(e) => { e.currentTarget.src = 'https://dummyimage.com/300x300/f3f4f6/9ca3af.png&text=No+Image'}}
         />
       </Link>
 
@@ -44,20 +40,31 @@ const ProductCard: React.FC<Props> = ({ product }) => {
           </h3>
         </Link>
         
-        {/* Phần Giá nằm ở cuối để đẩy xuống đáy */}
+        {/* Phần Giá và Đánh giá đẩy xuống đáy */}
         <div className="mt-auto">
-          <p className="text-red-600 font-bold text-lg">
-            {formatCurrency(Number(product.price))}
+          <p className="text-red-600 font-bold text-lg mb-2">
+            {formatCurrency(Number(displayPrice))}
           </p>
-          <div className="flex justify-between items-center mt-3">
-            <span className="text-xs text-gray-500">Kho: {product.stock}</span>
-            <button 
-              onClick={handleAddToCart}
-              className="bg-red-50 text-red-600 p-2 rounded-lg hover:bg-red-600 hover:text-white transition-colors"
-              title="Thêm vào giỏ hàng"
-            >
-              <ShoppingCart size={18} />
-            </button>
+          
+          <div className="flex items-center text-sm">
+            <div className="flex items-center gap-0.5">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  size={14} 
+                  className={i < Math.round(avgRating) ? "fill-yellow-400 text-yellow-400" : "fill-gray-200 text-gray-200"} 
+                />
+              ))}
+            </div>
+            {totalReviews > 0 ? (
+               <span className="ml-2 text-gray-500 text-xs">
+                 {totalReviews} đánh giá
+               </span>
+            ) : (
+               <span className="ml-2 text-gray-400 text-xs italic">
+                 Chưa có đánh giá
+               </span>
+            )}
           </div>
         </div>
       </div>

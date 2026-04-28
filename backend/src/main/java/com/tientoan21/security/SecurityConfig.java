@@ -35,7 +35,9 @@ public class SecurityConfig {
                                 "/api/products", "/api/products/**",
                                 "/api/orders", "/api/orders/**"
                         ).permitAll()
-                        .requestMatchers("/api/admin/dashboard/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/dashboard/**", "/api/admin/users/**",
+                                "/api/admin/orders/**", "/api/admin/products/**"
+                        ).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

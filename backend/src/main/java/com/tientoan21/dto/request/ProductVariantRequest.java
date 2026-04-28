@@ -1,5 +1,6 @@
 package com.tientoan21.dto.request;
 
+import com.tientoan21.enums.ProductStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -12,6 +13,7 @@ public record ProductVariantRequest(
         Long productId,
         @NotBlank(message = "Sku is required")
         String sku,
+        ProductStatus status,
         @Min(value = 0, message = "The price must be greater than zero.")
         BigDecimal price,
         @Min(value = 0, message = "The stock must be greater than zero.")

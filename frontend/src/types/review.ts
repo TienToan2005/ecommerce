@@ -5,7 +5,8 @@ export interface ReviewRequest {
 }
 export interface ReviewResponse extends ReviewRequest{
     id: number;
-    userId: number;
+    username: number;
+    createdAt: string;
 }
 export interface UpdateReview {
     content: string;

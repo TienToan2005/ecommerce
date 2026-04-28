@@ -25,7 +25,8 @@ public enum ErrorCode {
     VARIANT_NOT_FOUND(1013,HttpStatus.NOT_FOUND,"Variant not found"),
     INVALID_OTP(1014,HttpStatus.BAD_REQUEST,"INVALID_OTP"),
     USER_ALREADY_VERIFIED(1015,HttpStatus.BAD_REQUEST, "USER_ALREADY_VERIFIED"),
-    OTP_EXPIRED(1016,HttpStatus.BAD_REQUEST,"OTP_EXPIRED");
+    OTP_EXPIRED(1016,HttpStatus.BAD_REQUEST,"OTP_EXPIRED"),
+    CANNOT_BLOCK_ADMIN(1017,HttpStatus.BAD_REQUEST, "CANNOT_BLOCK_ADMIN");
     private int code;
     private HttpStatus status;
     private String message;
