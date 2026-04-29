@@ -3,6 +3,7 @@ export interface LoginRequest {
     username: string;
     password: string;
 }
+
 export interface RegisterRequest {
     phoneNumber: string;
     fullName: string;
@@ -10,15 +11,18 @@ export interface RegisterRequest {
     password: string;
     birthday: string;
 }
+
+export interface RefreshTokenResponse {
+    accessToken: string;
+    refreshToken: string;
+}
+
 export interface TokenResponse extends RefreshTokenResponse {
     username?: string;
     role?: string;
     authenticated?: boolean;
 }
-export interface RefreshTokenResponse {
-    accessToken: string;
-    refreshToken: string;
-}
+
 export interface UserRequest {
     fullName?: string;
     email: string;
@@ -29,8 +33,9 @@ export interface UserRequest {
     birthday?: string;
 }
 
-export interface UserResponse extends UserRequest {
-    id?: number;
+export interface UserResponse extends Omit<UserRequest, 'password'> {
+    id: number;
     role: string;
-    createdAt?: Date;
+    status: string;
+    createdAt?: string;
 }

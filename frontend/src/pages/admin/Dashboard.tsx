@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer 
 } from 'recharts';
 import { DollarSign, ShoppingBag, XCircle, Users, AlertTriangle, TrendingUp, Package } from 'lucide-react';
-import * as dashboardApi from '../../services/dashboard';
+import * as dashboardApi from '../../services/admin/dashboard';
 import type { DashboardStats, MonthlyRevenue, TopProduct } from '../../types/dashboard';
 import type { ProductVariantResponse } from '../../types/product';
 import { formatCurrency } from '../../utils/format';

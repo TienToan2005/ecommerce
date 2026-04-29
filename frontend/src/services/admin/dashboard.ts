@@ -1,7 +1,7 @@
-import api from './api';
-import type { DashboardStats, MonthlyRevenue, TopProduct } from '../types/dashboard'; 
-import type { ProductVariantResponse } from '../types/product';
-import type { ApiResponse } from '../types/apiresponse';
+import api from '../api';
+import type { DashboardStats, MonthlyRevenue, TopProduct } from '../../types/dashboard'; 
+import type { ProductVariantResponse } from '../../types/product';
+import type { ApiResponse } from '../../types/apiresponse';
 
 export const getStats = async (): Promise<DashboardStats> => {
     const res = await api.get<ApiResponse<DashboardStats>>(`/admin/dashboard/stats`);
