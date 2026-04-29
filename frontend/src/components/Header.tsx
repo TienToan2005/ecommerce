@@ -193,7 +193,7 @@ const Header: React.FC = () => {
                   <Link to="/profile" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
                     <UserCircle size={18} /> Thông tin tài khoản
                   </Link>
-                  <Link to="/my-orders" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
+                  <Link to="/order-history" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
                     <ClipboardList size={18} /> Quản lý đơn hàng
                   </Link>
                 </div>
