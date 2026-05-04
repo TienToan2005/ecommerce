@@ -27,10 +27,11 @@ export interface ProductRequest {
 }
 
 export interface ProductResponse extends Omit<ProductRequest, 'categoryId' | 'variants'> {
-  id?: number;
+  id: number;
   category: CategoryResponse;
   variants?: ProductVariantResponse[];
   reviews?: ReviewResponse[];
   averageRating?: number;
   totalReviews?: number;
+  createdAt?: string;
 }

@@ -1,5 +1,5 @@
 import api from './api';
-import type { LoginRequest, RegisterRequest, TokenResponse, RefreshTokenResponse, UserResponse, UserRequest } from '../types/user';
+import type { LoginRequest, RegisterRequest, TokenResponse, RefreshTokenResponse, UserResponse } from '../types/user';
 import type { ApiResponse } from '../types/apiresponse';
 
 // --- AUTH ---

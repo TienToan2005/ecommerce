@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import * as userApi from '../services/admin/user';
+import * as userApi from '../services/auth';
 import type { LoginRequest, UserResponse } from '../types/user';
 import { useCartStore } from './useCartStore';
 

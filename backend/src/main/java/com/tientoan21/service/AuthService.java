@@ -34,7 +34,7 @@ public class AuthService {
     private final EmailService emailService;
 
     public TokenResponse login(LoginRequest request) {
-        User user = userRepository.findUsersByEmailOrPhoneNumber(request.username(), request.username())
+        User user = userRepository.findByEmailOrPhoneNumber(request.username(), request.username())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if(!passwordEncoder.matches(request.password(), user.getPassword())){

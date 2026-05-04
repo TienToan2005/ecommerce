@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
-import { getAllProductsAdmin, deleteProductAdmin } from '../../services/admin/product';
+import { getAllProducts, deleteProduct } from '../../services/admin/product';
 import type { ProductResponse } from '../../types/product';
 import toast from 'react-hot-toast';
 
@@ -12,7 +12,7 @@ const AdminProduct: React.FC = () => {
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
-      const pageData = await getAllProductsAdmin(0, 20); 
+      const pageData = await getAllProducts({ page: 0, size: 20 }); 
       setProducts(pageData.content);
     } catch (error) {
       console.error("Lỗi lấy sản phẩm", error);
@@ -29,7 +29,7 @@ const AdminProduct: React.FC = () => {
   const handleDelete = async (id: number) => {
     if (window.confirm('Sếp có chắc chắn muốn ẩn sản phẩm này không?')) {
       try {
-        await deleteProductAdmin(id);
+        await deleteProduct(id);
         toast.success('Đã ẩn sản phẩm khỏi danh sách!');
         setProducts(prev => prev.filter(p => p.id !== id));
       } catch (error) {
@@ -75,8 +75,8 @@ const AdminProduct: React.FC = () => {
             <tbody>
               {products.map((item) => {
                 const totalStock = item.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
-                const minPrice = item.variants?.length > 0 
-                  ? Math.min(...item.variants.map(v => v.price)) 
+                const minPrice = item.variants && item.variants.length > 0 
+                  ? Math.min(...item.variants.map(v => Number(v.price))) 
                   : 0;
 
                 return (

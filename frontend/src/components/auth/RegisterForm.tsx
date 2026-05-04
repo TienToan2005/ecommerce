@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import * as userApi from '../../services/admin/user';
+import * as userApi from '../../services/auth';
 import toast from 'react-hot-toast';
 
 interface RegisterFormProps {

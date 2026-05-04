@@ -8,7 +8,6 @@ const AdminCustomer: React.FC = () => {
   const [customers, setCustomers] = useState<UserResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // 1. Hàm gọi API lấy dữ liệu
   const fetchCustomers = async () => {
     try {
       setIsLoading(true);
@@ -28,7 +27,6 @@ const AdminCustomer: React.FC = () => {
 
   const handleToggleLock = async (id: number, currentStatus: string) => {
     try {
-      // Gọi API xuống Backend Spring Boot
       const newStatus = await toggleUserStatusAdmin(id);
       
       setCustomers(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c));

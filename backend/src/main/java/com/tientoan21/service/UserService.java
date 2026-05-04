@@ -25,7 +25,7 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userRepository.findUsersByEmailOrPhoneNumber(username,username)
+        return userRepository.findByEmailOrPhoneNumber(username,username)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
     }
 }

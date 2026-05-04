@@ -62,8 +62,13 @@ public class AdminProductService {
         if (product.getVariants() != null) {
             product.getVariants().forEach(variant -> {
                 variant.setProduct(product);
+
                 if (variant.getSku() == null) {
                     variant.setSku(generateSku(product.getName(), variant.getAttributes()));
+                }
+
+                if (variant.getStatus() == null) {
+                    variant.setStatus(ProductStatus.ACTIVE);
                 }
             });
         }

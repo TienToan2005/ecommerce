@@ -17,7 +17,7 @@ public record ProductVariantRequest(
         @Min(value = 0, message = "The price must be greater than zero.")
         BigDecimal price,
         @Min(value = 0, message = "The stock must be greater than zero.")
-        int stock,
+        Integer stock,
 
         Map<String, String> attributes
 ) {

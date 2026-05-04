@@ -9,11 +9,10 @@ const AdminOrder: React.FC = () => {
   const [orders, setOrders] = useState<OrderResponse[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // 1. Fetch Dữ liệu thật từ Backend
   const fetchOrders = async () => {
     try {
       setIsLoading(true);
-      const pageData = await getAllOrdersAdmin(0, 20);
+      const pageData = await getAllOrdersAdmin({ page: 0, size: 20 });
       setOrders(pageData.content);
     } catch (error) {
       console.error("Lỗi lấy danh sách đơn hàng", error);

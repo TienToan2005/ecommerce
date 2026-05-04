@@ -1,13 +1,34 @@
 export interface ApiResponse<T> {
-  data: T;    
-  success?: boolean;
+  code: number;
+  message: string;
+  data: T;
 }
 
 export interface Page<T> {
   content: T[];
-  pageable: string;
+  pageable: {
+    pageNumber: number;
+    pageSize: number;
+    sort: {
+      empty: boolean;
+      sorted: boolean;
+      unsorted: boolean;
+    };
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  last: boolean;
   totalElements: number;
   totalPages: number;
   size: number;
   number: number;
+  sort: {
+    empty: boolean;
+    sorted: boolean;
+    unsorted: boolean;
+  };
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
 }
