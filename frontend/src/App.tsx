@@ -15,6 +15,7 @@ import Register from './pages/auth/Register';
 import Cart from './pages/cart/Cart';
 import ProductDetail from './pages/product/ProductDetail';
 import SearchPage from './pages/SearchPage';
+import VNPayReturn from './components/VNPayReturn';
 
 import ProfilePage from './pages/ProfilePage';
 import OrderHistory from './pages/order/OrderHistory';
@@ -45,7 +46,7 @@ const AdminRoute = () => {
 };
 
 const App: React.FC = () => {
-  const checkAuth = useAuthStore((state) => state.checkAuth);
+  const checkAuth = useAuthStore(state => state.checkAuth);
 
   useEffect(() => {
     checkAuth();
@@ -71,6 +72,7 @@ const App: React.FC = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/vnpay-return" element={<VNPayReturn />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-history/:id" element={<OrderDetail />} />
           </Route>

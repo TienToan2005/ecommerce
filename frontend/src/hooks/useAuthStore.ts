@@ -8,6 +8,7 @@ import { useCartStore } from './useCartStore';
 interface AuthState {
   isAuthenticated: boolean;
   user: UserResponse | null;
+  accessToken: string | null;
   isAuthModalOpen: boolean;
   loading: boolean;
   error: string | null;
@@ -15,13 +16,14 @@ interface AuthState {
   openAuthModal: () => void;
   closeAuthModal: () => void;
   loginAction: (data: LoginRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>; 
   checkAuth: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: !!localStorage.getItem('accessToken'),
+export const useAuthStore = create<AuthState>((set, get) => ({
+  isAuthenticated: false, 
   user: null,
+  accessToken: null,
   isAuthModalOpen: false,
   loading: false,
   error: null,
@@ -32,12 +34,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginAction: async (data: LoginRequest) => {
     set({ loading: true, error: null });
     try {
+      // API Login giờ chỉ trả về accessToken trong Body JSON
+      // Còn refreshToken đã được Backend tự động nhét vào HttpOnly Cookie
       const result = await userApi.loginUser(data);
-      localStorage.setItem('accessToken', result.accessToken);
-      localStorage.setItem('refreshToken', result.refreshToken);
+      
+      // 1. Lưu accessToken vào State (Memory)
+      set({ accessToken: result.accessToken });
       
       useCartStore.getState().clearCartUI();
 
+      // 2. Lấy thông tin User (Axios Interceptor sẽ tự động đính kèm accessToken từ State)
       const userProfile = await userApi.getProfile();
       
       set({ 
@@ -48,7 +54,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       useCartStore.getState().fetchCart();
-      
       toast.success('Đăng nhập thành công!');
 
     } catch (error: unknown) {
@@ -63,28 +68,36 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 
-  logout: () => {
-    set({ isAuthenticated: false, user: null });
-    useCartStore.getState().clearCartDB();
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    toast.success('Đã đăng xuất!');
+  logout: async () => {
+    try {
+      // BẮT BUỘC: Gọi API báo Backend xóa HttpOnly Cookie
+      await userApi.logoutUser(); 
+    } catch (error) {
+      console.error("Lỗi khi xóa cookie phía server", error);
+    } finally {
+      // Xóa data trên RAM
+      set({ isAuthenticated: false, user: null, accessToken: null });
+      useCartStore.getState().clearCartDB();
+      toast.success('Đã đăng xuất!');
+    }
   },
 
   checkAuth: async () => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      try {
-        const userProfile = await userApi.getProfile();
-        set({ isAuthenticated: true, user: userProfile });
-        
-        useCartStore.getState().fetchCart();
+    try {
+      // 1. Gọi API Refresh Token. 
+      // Trình duyệt sẽ tự động gửi kèm HttpOnly Cookie lên.
+      // Nếu Cookie hợp lệ, Backend trả về accessToken mới.
+      const result = await userApi.refreshToken(); 
+      set({ accessToken: result.accessToken });
 
-      } catch {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        set({ isAuthenticated: false, user: null });
-      }
+      // 2. Có token mới rồi thì lấy Profile
+      const userProfile = await userApi.getProfile();
+      set({ isAuthenticated: true, user: userProfile });
+      
+      useCartStore.getState().fetchCart();
+
+    } catch (error) {
+      set({ isAuthenticated: false, user: null, accessToken: null });
     }
   }
 }));

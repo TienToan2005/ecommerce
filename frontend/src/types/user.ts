@@ -14,13 +14,23 @@ export interface RegisterRequest {
 
 export interface RefreshTokenResponse {
     accessToken: string;
-    refreshToken: string;
 }
 
 export interface TokenResponse extends RefreshTokenResponse {
     username?: string;
     role?: string;
     authenticated?: boolean;
+}
+
+export interface VerifyAccountRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  newPassword: string;
 }
 
 export interface UserRequest {

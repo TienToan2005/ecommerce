@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import ProductCard from '../components/ProductCard';
-import api from '../services/api'; // Đường dẫn gọi API của sếp
 import { LayoutGrid, Smartphone, Laptop, Headphones, Watch, Monitor } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useCategoryStore } from '../hooks/useCategoryStore';
 
 const getCategoryIcon = (name: string) => {
   const lowerName = name.toLowerCase();
@@ -17,7 +17,7 @@ const getCategoryIcon = (name: string) => {
 
 const Home: React.FC = () => {
   const location = useLocation();
-  const [categories, setCategories] = useState<any[]>([]);
+  const { categories, fetchCategories } = useCategoryStore();
   const [activeCategoryId, setActiveCategoryId] = useState<number | null>(null);
 
   const queryParams = useMemo(() => ({
@@ -30,26 +30,17 @@ const Home: React.FC = () => {
   );
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await api.get('/categories');
-        setCategories(res.data.data || res.data || []);
-      } catch (err) {
-        console.error("Lỗi lấy danh mục:", err);
-      }
-    };
-    fetchCategories();
-  }, []);
+    fetchCategories(); 
+  }, [fetchCategories]);
+
   useEffect(() => {
     const state = location.state as { categoryId?: number } | null;
-
     if (state && state.categoryId) {
       
       setTimeout(() => {
         setActiveCategoryId(state.categoryId as number);
       }, 0);
       
-      // Xóa state trên URL (để nếu user F5 trang thì nó không bị kẹt lại bộ lọc cũ)
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -59,9 +50,7 @@ const Home: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       
-      {/* ========================================= */}
       {/* 1. BANNER QUẢNG CÁO */}
-      {/* ========================================= */}
       <div className="w-full h-48 md:h-[400px] bg-gradient-to-r from-red-600 to-red-400 rounded-2xl mb-8 flex items-center justify-center text-white shadow-lg relative overflow-hidden">
         <div className="relative z-10 text-center px-4">
           <h2 className="text-3xl md:text-5xl font-black mb-4 tracking-tight">T-PHONE HOT SALE</h2>

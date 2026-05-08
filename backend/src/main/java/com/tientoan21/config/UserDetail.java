@@ -1,6 +1,7 @@
 package com.tientoan21.config;
 
 import com.tientoan21.enums.UserRole;
+import com.tientoan21.enums.UserStatus;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -16,6 +17,7 @@ public class UserDetail implements org.springframework.security.core.userdetails
     private final String username;
     private final String password;
     private final UserRole role;
+    private final UserStatus status;
     private final String email;
     private final String phoneNumber;
 
@@ -41,7 +43,7 @@ public class UserDetail implements org.springframework.security.core.userdetails
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return this.status == UserStatus.ACTIVE;
     }
 
     @Override
@@ -51,6 +53,6 @@ public class UserDetail implements org.springframework.security.core.userdetails
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return this.isEnabled();
     }
 }

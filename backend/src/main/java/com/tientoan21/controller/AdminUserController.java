@@ -38,9 +38,12 @@ public class AdminUserController {
                 .build();
     }
     @GetMapping("/customers")
-    public ApiResponse<Page<UserResponse>> getAllCustomers(Pageable pageable) {
+    public ApiResponse<Page<UserResponse>> getAllCustomers(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "status", required = false) String status,
+            Pageable pageable) {
         return ApiResponse.<Page<UserResponse>>builder()
-                .data(userImplService.getAllCustomers(pageable))
+                .data(userImplService.getAllCustomers(search,status,pageable))
                 .build();
     }
     @PutMapping("/{id}/toggle-status")

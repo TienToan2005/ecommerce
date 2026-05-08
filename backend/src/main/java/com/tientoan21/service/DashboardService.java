@@ -1,6 +1,5 @@
 package com.tientoan21.service;
 
-
 import com.tientoan21.dto.response.DashboardStatsDTO;
 import com.tientoan21.dto.response.MonthlyRevenueDTO;
 import com.tientoan21.dto.response.ProductVariantResponse;
@@ -18,7 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -36,36 +37,48 @@ public class DashboardService {
         long delivered = orderRepository.countByStatus(OrderStatus.DELIVERED);
         long cancelled = orderRepository.countByStatus(OrderStatus.CANCELLED);
         long totalUsers = userRepository.count();
-        return new DashboardStatsDTO(revenue,delivered,cancelled,totalUsers);
+        return new DashboardStatsDTO(revenue, delivered, cancelled, totalUsers);
     }
-    @Transactional
+
+    @Transactional(readOnly = true)
     public List<MonthlyRevenueDTO> getMonthlyRevenue(int year){
         List<Object[]> results = orderRepository.getMonthlyRevenueByYear(year);
-        List<MonthlyRevenueDTO> chartData = new ArrayList<>();
+
+        Map<Integer, BigDecimal> monthlyMap = new HashMap<>();
+        for (int i = 1; i <= 12; i++) {
+            monthlyMap.put(i, BigDecimal.ZERO);
+        }
 
         for(Object[] row : results){
-            int month = (Integer) row[0];
+            int month = ((Number) row[0]).intValue();
             BigDecimal revenue = (BigDecimal) row[1];
-            chartData.add(new MonthlyRevenueDTO(month, revenue));
+            monthlyMap.put(month, revenue);
+        }
+
+        List<MonthlyRevenueDTO> chartData = new ArrayList<>();
+        for (int i = 1; i <= 12; i++) {
+            chartData.add(new MonthlyRevenueDTO(i, monthlyMap.get(i)));
         }
 
         return chartData;
     }
 
+    @Transactional(readOnly = true)
     public List<TopProductDTO> getTopSellingProducts() {
-
         List<Object[]> results = orderRepository.getTopSellingProducts(PageRequest.of(0, 5));
         List<TopProductDTO> topProducts = new ArrayList<>();
 
         for (Object[] row : results) {
             String name = (String) row[0];
-            Long totalSold = (Long) row[1];
+            Long totalSold = ((Number) row[1]).longValue();
             BigDecimal totalRevenue = (BigDecimal) row[2];
+
             topProducts.add(new TopProductDTO(name, totalSold, totalRevenue));
         }
         return topProducts;
     }
 
+    @Transactional(readOnly = true)
     public List<ProductVariantResponse> getLowStock(){
         List<ProductVariant> variantList = productVariantRepository.findAllLowStock();
 

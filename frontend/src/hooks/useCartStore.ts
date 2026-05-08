@@ -70,7 +70,6 @@ export const useCartStore = create<CartState>((set, get) => ({
   updateQuantity: async (cartItemId, quantity) => {
     try {
       if (quantity <= 0) {
-        // Nếu user giảm về 0 -> Bắn cảnh báo hoặc gọi hàm xóa
         console.warn("Số lượng phải lớn hơn 0");
         return;
       }
@@ -102,7 +101,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     try {
       const userId = useAuthStore.getState().user?.id;
       if (userId) {
-        await cartApi.clearCart(userId); // Gọi API sếp đã viết
+        await cartApi.clearCart(userId);
         set({ items: [] });
       }
     } catch (error) {

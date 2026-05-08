@@ -4,13 +4,18 @@ import com.tientoan21.dto.request.UserRequest;
 import com.tientoan21.dto.response.UserResponse;
 import com.tientoan21.entity.User;
 import com.tientoan21.enums.ErrorCode;
+import com.tientoan21.enums.OrderStatus;
 import com.tientoan21.enums.UserStatus;
 import com.tientoan21.exception.AppException;
 import com.tientoan21.mapper.UserMapper;
 import com.tientoan21.repository.UserRepository;
+import com.tientoan21.specification.UserSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,8 +66,27 @@ public class AdminUserService {
         userRepository.save(user);
     }
 
-    public Page<UserResponse> getAllCustomers(Pageable pageable) {
-        Page<User> customers = userRepository.findByRoleNot("ADMIN", pageable);
+    public Page<UserResponse> getAllCustomers(String search, String status, Pageable pageable) {
+        Pageable customPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
+
+        UserStatus userStatus = null;
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                userStatus = UserStatus.valueOf(status.toUpperCase().trim());
+            } catch (IllegalArgumentException e) {
+                userStatus = null;
+            }
+        }
+        Specification<User> spec = Specification
+                .where(UserSpecification.globalSearch(search))
+                .and(UserSpecification.hasStatus(userStatus))
+                .and(UserSpecification.isNotRole("ADMIN"));
+
+        Page<User> customers = userRepository.findAll(spec, customPageable);
 
         return customers.map(userMapper::toUserResponse);
     }

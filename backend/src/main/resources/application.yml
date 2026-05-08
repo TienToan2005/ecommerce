@@ -42,3 +42,8 @@ cloudinary:
   cloud-name: ${CLOUDINARY_NAME}
   api-key: ${CLOUDINARY_KEY}
   api-secret: ${CLOUDINARY_SECRET}
+
+app:
+  security:
+    cookie:
+      secure: ${COOKIE_SECURE:false}

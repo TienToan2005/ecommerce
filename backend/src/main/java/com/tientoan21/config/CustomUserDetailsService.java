@@ -24,6 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                 username,
                 user.getPassword(),
                 user.getRole(),
+                user.getStatus(),
                 user.getEmail(),
                 user.getPhoneNumber()
 

@@ -27,6 +27,7 @@ export interface ProductRequest {
 }
 
 export interface ProductResponse extends Omit<ProductRequest, 'categoryId' | 'variants'> {
+  price: number;
   id: number;
   category: CategoryResponse;
   variants?: ProductVariantResponse[];

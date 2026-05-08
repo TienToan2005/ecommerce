@@ -9,7 +9,6 @@ import lombok.*;
 @Builder
 public class TokenResponse {
     private String accessToken;
-    private String refreshToken;
     private String username;
     private String role;
     private Boolean authenticated;

@@ -4,5 +4,7 @@ public record AddressRequest(
     String street,
     String city,
     String ward,
-    String district
+    String district,
+    String receiverName,
+    String receiverPhone
 ) {}

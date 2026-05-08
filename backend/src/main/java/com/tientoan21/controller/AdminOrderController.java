@@ -3,6 +3,7 @@ package com.tientoan21.controller;
 import com.tientoan21.dto.request.UpdateOrderStatus;
 import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.OrderResponse;
+import com.tientoan21.enums.OrderStatus;
 import com.tientoan21.service.AdminOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,12 +22,12 @@ public class AdminOrderController {
 
     @GetMapping
     public ApiResponse<Page<OrderResponse>> getAllOrders(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(value = "search",required = false) String search,
+            @RequestParam(value = "status",required = false) String status,
+            Pageable pageable) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return ApiResponse.<Page<OrderResponse>>builder()
-                .data(orderImplService.getAllOrder(pageable))
+                .data(orderImplService.getAllOrders(search, status, pageable))
                 .build();
     }
     @PutMapping("/{id}")

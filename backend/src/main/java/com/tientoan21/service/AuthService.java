@@ -12,8 +12,13 @@ import com.tientoan21.entity.User;
 import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.enums.UserRole;
 import com.tientoan21.exception.AppException;
+import com.tientoan21.repository.RefreshTokenRepository;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.tientoan21.mapper.UserMapper;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.tientoan21.repository.UserRepository;
@@ -32,29 +37,50 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final RefreshTokenService refreshTokenService;
     private final EmailService emailService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    public TokenResponse login(LoginRequest request) {
+    @Value("${app.security.cookie.secure}")
+    private boolean isCookieSecure;
+
+    private ResponseCookie buildRefreshTokenCookie(String token, long maxAgeInSeconds) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)
+                .secure(isCookieSecure)
+                .path("/")
+                .maxAge(maxAgeInSeconds)
+                .sameSite("Lax")
+                .build();
+    }
+
+    public TokenResponse login(LoginRequest request, HttpServletResponse response) {
         User user = userRepository.findByEmailOrPhoneNumber(request.username(), request.username())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if(!passwordEncoder.matches(request.password(), user.getPassword())){
+        if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Password does not match");
         }
+
         var accessToken = jwtUtils.generateAccessToken(user);
         var refreshToken = refreshTokenService.createRefreshToken(user);
+
+        // Sử dụng hàm helper, sống 7 ngày
+        ResponseCookie cookie = buildRefreshTokenCookie(refreshToken.getToken(), 7 * 24 * 60 * 60);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
         return TokenResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
                 .authenticated(true)
                 .username(request.username())
                 .role(user.getRole().name())
                 .build();
     }
-    public UserResponse register(RegisterRequest request){
-        if(userRepository.existsByEmail(request.email())){
+
+    @Transactional(rollbackFor = Exception.class)
+    public UserResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new AppException(ErrorCode.USER_EXISTS, "Email already exists");
         }
-        if(userRepository.existsByPhoneNumber(request.phoneNumber())){
+        if (userRepository.existsByPhoneNumber(request.phoneNumber())) {
             throw new AppException(ErrorCode.USER_EXISTS, "Phone already exists");
         }
         String otp = generateOTP();
@@ -77,17 +103,32 @@ public class AuthService {
         return userMapper.toUserResponse(savedUser);
     }
 
-    public RefreshTokenResponse refreshToken(String token){
-        RefreshToken token1 = refreshTokenService.verifyToken(token);
+    @Transactional
+    public RefreshTokenResponse refreshToken(String token, HttpServletResponse response) {
+        // Kiểm tra token cũ
+        RefreshToken oldToken = refreshTokenService.verifyToken(token);
 
-        RefreshToken refreshToken = refreshTokenService.rotateToken(token1);
+        // Cấp phát token mới (Rotate)
+        RefreshToken newRefreshToken = refreshTokenService.rotateToken(oldToken);
+        String newAccessToken = jwtUtils.generateAccessToken(newRefreshToken.getUser());
 
-        String accessToken = jwtUtils.generateAccessToken(refreshToken.getUser());
+        // CHUẨN HOÁ: Ghi đè Cookie cũ bằng Refresh Token mới
+        ResponseCookie cookie = buildRefreshTokenCookie(newRefreshToken.getToken(), 7 * 24 * 60 * 60);
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return RefreshTokenResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken.getToken())
+                .accessToken(newAccessToken)
                 .build();
+    }
+
+    @Transactional
+    public void logout(String token, HttpServletResponse response) {
+        if (token != null) {
+            refreshTokenRepository.deleteByToken(token);
+        }
+
+        ResponseCookie deleteCookie = buildRefreshTokenCookie("", 0);
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
     }
 
     @Transactional

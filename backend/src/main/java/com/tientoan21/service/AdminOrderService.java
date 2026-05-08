@@ -9,9 +9,13 @@ import com.tientoan21.enums.PaymentStatus;
 import com.tientoan21.exception.AppException;
 import com.tientoan21.mapper.OrderMapper;
 import com.tientoan21.repository.OrderRepository;
+import com.tientoan21.specification.OrderSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,10 +26,27 @@ public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
 
-    public Page<OrderResponse> getAllOrder(Pageable pageable){
-        Page<Order> orders = orderRepository.findAll(pageable);
+    public Page<OrderResponse> getAllOrders(String search, String status, Pageable pageable) {
+        Pageable customPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                Sort.by("createdAt").descending()
+        );
 
-        return orders.map(orderMapper::toOrderResponse);
+        OrderStatus orderStatus = null;
+        if (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("ALL")) {
+            try {
+                orderStatus = OrderStatus.valueOf(status.toUpperCase().trim());
+            } catch (IllegalArgumentException e) {
+                orderStatus = null;
+            }
+        }
+        Specification<Order> spec = Specification.where(OrderSpecification.hasOrderNumber(search))
+                .and(OrderSpecification.hasStatus(orderStatus));
+
+        Page<Order> orderPage = orderRepository.findAll(spec, customPageable);
+
+        return orderPage.map(orderMapper::toOrderResponse);
     }
     @Transactional
     public OrderResponse updateOrderStatus(Long id, String status){

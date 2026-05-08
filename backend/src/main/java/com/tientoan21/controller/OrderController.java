@@ -46,9 +46,11 @@ public class OrderController {
                 .build();
     }
     @GetMapping("/vnpay/return")
-    public ApiResponse<OrderResponse> verifyVnPayPayment(@RequestParam("query") String query) {
+    public ApiResponse<OrderResponse> verifyVnPayPayment(HttpServletRequest request) {
+        String queryString = request.getQueryString();
+
         return ApiResponse.<OrderResponse>builder()
-                .data(orderService.verifyVnPayPayment(query))
+                .data(orderService.verifyVnPayPayment(queryString))
                 .build();
     }
 }

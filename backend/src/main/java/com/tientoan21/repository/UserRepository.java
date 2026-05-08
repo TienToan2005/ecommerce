@@ -4,12 +4,18 @@ import com.tientoan21.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User,Long> {
+public interface UserRepository extends JpaRepository<User,Long>, JpaSpecificationExecutor<User> {
 
     Optional<User> findByEmailOrPhoneNumber(String email, String phoneNumber);
 
@@ -21,5 +27,8 @@ public interface UserRepository extends JpaRepository<User,Long> {
 
     Optional<User> findByEmail(String email);
 
-    Page<User> findByRoleNot(String admin, Pageable pageable);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM User u WHERE u.isEnabled = false AND u.verificationCodeExpiresAt < :now")
+    int deleteUnverifiedAndExpiredUsers(@Param("now") LocalDateTime now);
 }

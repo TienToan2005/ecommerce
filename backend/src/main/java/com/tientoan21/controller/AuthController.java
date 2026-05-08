@@ -5,6 +5,7 @@ import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.RefreshTokenResponse;
 import com.tientoan21.dto.response.TokenResponse;
 import com.tientoan21.dto.response.UserResponse;
+import jakarta.servlet.http.HttpServletResponse; // <--- Cần import cái này
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -17,17 +18,22 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ApiResponse<TokenResponse> login(@RequestBody @Valid LoginRequest request){
+    public ApiResponse<TokenResponse> login(
+            @RequestBody @Valid LoginRequest request,
+            HttpServletResponse response
+    ){
         return ApiResponse.<TokenResponse>builder()
-                .data(authService.login(request))
+                .data(authService.login(request, response))
                 .build();
     }
+
     @PostMapping("/register")
     public ApiResponse<UserResponse> register(@RequestBody @Valid RegisterRequest request){
         return ApiResponse.<UserResponse>builder()
                 .data(authService.register(request))
                 .build();
     }
+
     @PostMapping("/verify")
     public ApiResponse<String> verifyOtp(@RequestBody VerifyAccountRequest request) {
         authService.verifyAccount(request.email(), request.otp());
@@ -35,12 +41,32 @@ public class AuthController {
                 .data("Kích hoạt tài khoản thành công!")
                 .build();
     }
+
     @PostMapping("/refresh")
-    public ApiResponse<RefreshTokenResponse> refresh(@RequestBody @Valid RefreshTokenRequest request){
+    public ApiResponse<RefreshTokenResponse> refresh(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response //
+    ){
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new RuntimeException("Refresh token is missing or invalid");
+        }
+
         return ApiResponse.<RefreshTokenResponse>builder()
-                .data(authService.refreshToken(request.token()))
+                .data(authService.refreshToken(refreshToken, response))
                 .build();
     }
+
+    @PostMapping("/logout")
+    public ApiResponse<String> logout(
+            @CookieValue(name = "refreshToken", required = false) String refreshToken,
+            HttpServletResponse response
+    ){
+        authService.logout(refreshToken, response);
+        return ApiResponse.<String>builder()
+                .data("Đăng xuất thành công!")
+                .build();
+    }
+
     @PostMapping("/resend-otp")
     public ApiResponse<String> resendOtp(@RequestParam String email) {
         authService.resendOtp(email);

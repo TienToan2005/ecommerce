@@ -18,6 +18,7 @@ export interface OrderResponse {
   paymentInfo: PaymentResponse;
   status: 'PENDING' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
   createdAt: string;
+  createdBy: string;
 }
 
 export interface OrderItemRequest {

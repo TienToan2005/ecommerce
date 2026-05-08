@@ -2,6 +2,12 @@ import api from '../api';
 import type { UserResponse, UserRequest } from '../../types/user';
 import type { ApiResponse, Page } from '../../types/apiresponse';
 
+export interface UserQueryParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  status?: string;
+}
 
 export const createUser = async (data: UserRequest): Promise<UserResponse> => {
     const res = await api.post<ApiResponse<UserResponse>>('/admin/users', data);
@@ -13,7 +19,7 @@ export const getUserById = async (id: number): Promise<UserResponse> => {
     return res.data.data;
 }
 
-export const getAllUsers = async (params?: {page?: number, size?: number, sort?: string}): Promise<Page<UserResponse>> => {
+export const getAllUsers = async (params?: UserQueryParams): Promise<Page<UserResponse>> => {
     const res = await api.get<ApiResponse<Page<UserResponse>>>('/admin/users', { params });
     return res.data.data;
 }
@@ -29,9 +35,9 @@ export const deleteUser = async (id: number): Promise<string> => {
     return res.data.data;
 }
 
-export const getAllCustomers = async (page = 0, size = 10): Promise<Page<UserResponse>> => {
-  const response = await api.get<ApiResponse<Page<UserResponse>>>(`/admin/users?page=${page}&size=${size}`);
-  return response.data.data;
+export const getAllCustomers = async (params?: UserQueryParams): Promise<Page<UserResponse>> => {
+  const res = await api.get<ApiResponse<Page<UserResponse>>>('/admin/users/customers', { params });
+  return res.data.data;
 };
 
 export const toggleUserStatusAdmin = async (userId: number): Promise<string> => {

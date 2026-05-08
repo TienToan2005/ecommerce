@@ -33,6 +33,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             UserDetail userDetail = (UserDetail) userDetailsService.loadUserByUsername(username);
 
+            if (!userDetail.isAccountNonLocked()) {
+                throw new RuntimeException("Tài khoản đã bị khóa trong phiên đăng nhập!");
+            }
+
             if(StringUtils.hasText(username) && jwtUtils.isValidToken(token,userDetail)){
                 log.info("Valid JWT From: {}", username);
 

@@ -18,6 +18,8 @@ public class Address {
     private String city;
     private String ward;
     private String district;
+    private String receiverName;
+    private String receiverPhone;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

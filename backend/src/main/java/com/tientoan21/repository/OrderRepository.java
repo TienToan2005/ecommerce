@@ -5,16 +5,18 @@ import com.tientoan21.enums.OrderStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, Long> {
+public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecificationExecutor<Order> {
     Page<Order> findByUserIdOrderByCreatedAtDesc(Long id, Pageable pageable);
 
     @Query("SELECT COUNT(o) > 0 FROM Order o " +
@@ -49,4 +51,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Object[]> getTopSellingProducts(Pageable pageable);
 
     Optional<Order> findByOrderNumber(String orderNumber);
+
+    List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAtBefore);
 }
