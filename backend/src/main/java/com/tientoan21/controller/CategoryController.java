@@ -1,13 +1,14 @@
 package com.tientoan21.controller;
 
-import com.tientoan21.dto.request.CategoryRequest;
 import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.CategoryResponse;
 import com.tientoan21.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -17,11 +18,14 @@ import java.util.List;
 public class CategoryController {
     private final CategoryService categoryService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<CategoryResponse> create(@RequestBody CategoryRequest request){
+    public ApiResponse<CategoryResponse> createCategory(
+            @RequestParam("name") String name,
+            @RequestParam(value = "image", required = false) MultipartFile file
+    ) {
         return ApiResponse.<CategoryResponse>builder()
-                .data(categoryService.create(request))
+                .data(categoryService.create(name, file))
                 .build();
     }
     @GetMapping
@@ -36,11 +40,15 @@ public class CategoryController {
                 .data(categoryService.getCategoryById(id))
                 .build();
     }
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<CategoryResponse> updateCategory(@PathVariable Long id, @RequestBody @Valid CategoryRequest request){
+    public ApiResponse<CategoryResponse> updateCategory(
+            @PathVariable Long id,
+            @RequestParam("name") String name,
+            @RequestParam(value = "image", required = false) MultipartFile file
+    ) {
         return ApiResponse.<CategoryResponse>builder()
-                .data(categoryService.updateCategory(id, request))
+                .data(categoryService.updateCategory(id, name, file))
                 .build();
     }
     @DeleteMapping("/{id}")

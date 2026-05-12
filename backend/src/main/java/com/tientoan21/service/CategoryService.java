@@ -1,6 +1,5 @@
 package com.tientoan21.service;
 
-import com.tientoan21.dto.request.CategoryRequest;
 import com.tientoan21.dto.response.CategoryResponse;
 import com.tientoan21.entity.Category;
 import com.tientoan21.enums.ErrorCode;
@@ -10,6 +9,7 @@ import com.tientoan21.mapper.CategoryMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.tientoan21.repository.CategoryRepository;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,12 +19,20 @@ import java.util.List;
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
-
-    public CategoryResponse create(CategoryRequest request){
-        if(categoryRepository.existsCategoryByName(request.name())){
+    private final CloudinaryService cloudinaryService;
+    public CategoryResponse create(String name, MultipartFile file) {
+        if(categoryRepository.existsCategoryByName(name)){
             throw new AppException(ErrorCode.CATEGORY_EXISTS);
         }
-        Category category = categoryMapper.toCategory(request);
+
+        Category category = new Category();
+        category.setName(name);
+
+        if (file != null && !file.isEmpty()) {
+            String imageUrl = cloudinaryService.uploadFile(file);
+            category.setImage(imageUrl);
+        }
+
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
     public List<CategoryResponse> getALlCategory(){
@@ -39,13 +47,21 @@ public class CategoryService {
         return categoryMapper.toCategoryResponse(category);
     }
     @Transactional
-    public CategoryResponse updateCategory(Long id, CategoryRequest request){
+    public CategoryResponse updateCategory(Long id, String name, MultipartFile file) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        category.setName(request.name());
-        Category saved = categoryRepository.save(category);
+        category.setName(name);
 
+        if (file != null && !file.isEmpty()) {
+            if (category.getImage() != null) {
+                cloudinaryService.deleteFile(category.getImage());
+            }
+            String imageUrl = cloudinaryService.uploadFile(file);
+            category.setImage(imageUrl);
+        }
+
+        Category saved = categoryRepository.save(category);
         return categoryMapper.toCategoryResponse(saved);
     }
     @Transactional

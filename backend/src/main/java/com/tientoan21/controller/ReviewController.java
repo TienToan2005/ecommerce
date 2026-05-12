@@ -16,11 +16,11 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/review")
+@RequestMapping("/api/reviews")
 public class ReviewController {
     private final ReviewService reviewService;
 
-    @PostMapping(value = "/api/reviews", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<ReviewResponse> createReview(
             @RequestPart("data") ReviewRequest request,
             @RequestPart(value = "images", required = false) List<MultipartFile> files
@@ -50,7 +50,7 @@ public class ReviewController {
     @PutMapping("/{id}")
     public ApiResponse<ReviewResponse> updateReview(@PathVariable Long id, @RequestBody UpdateReview request){
         return ApiResponse.<ReviewResponse>builder()
-                .data(reviewService.updateReview(id,request.content(), request.rating()))
+                .data(reviewService.updateReview(id,request))
                 .build();
     }
     @DeleteMapping("/{id}")

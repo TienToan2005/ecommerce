@@ -1,11 +1,11 @@
 package com.tientoan21.service;
 
 import com.tientoan21.config.VNPayConfig;
+import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.entity.Order;
 import com.tientoan21.enums.PaymentStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
@@ -22,7 +22,7 @@ public class PaymentService {
 
     // --- LOGIC 1: TẠO LINK THANH TOÁN ---
     public String createVnPayPaymentUrl(Order order, HttpServletRequest request) {
-        long amount = order.getTotalPrice().longValue() * 100; // VNPay nhân 100
+        long amount = order.getTotalPrice().longValue() * 100;
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");
@@ -30,54 +30,62 @@ public class PaymentService {
         vnp_Params.put("vnp_TmnCode", vnPayConfig.getVnp_TmnCode());
         vnp_Params.put("vnp_Amount", String.valueOf(amount));
         vnp_Params.put("vnp_CurrCode", "VND");
-        vnp_Params.put("vnp_TxnRef", order.getId().toString());
-        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang: " + order.getId());
+        vnp_Params.put("vnp_TxnRef", order.getOrderNumber());
+        vnp_Params.put("vnp_OrderInfo", "ThanhToanDonHang_" + order.getOrderNumber());
         vnp_Params.put("vnp_OrderType", "other");
         vnp_Params.put("vnp_ReturnUrl", vnPayConfig.getVnp_ReturnUrl());
-        vnp_Params.put("vnp_IpAddr", VNPayConfig.getIpAddress(request));
+        vnp_Params.put("vnp_Locale", "vn");
+        vnp_Params.put("vnp_IpAddr", "127.0.0.1");
+        //vnp_Params.put("vnp_IpAddr", VNPayConfig.getIpAddress(request));
 
-        // Format ngày giờ theo chuẩn VNPay
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        formatter.setTimeZone(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
+
         String vnp_CreateDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
 
-        cld.add(Calendar.MINUTE, 15); // Link hết hạn sau 15 phút
+        cld.add(Calendar.MINUTE, 15);
         String vnp_ExpireDate = formatter.format(cld.getTime());
         vnp_Params.put("vnp_ExpireDate", vnp_ExpireDate);
 
-        // Build chuỗi Hash và Query URL (Cần sắp xếp alphabet)
         List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
         Collections.sort(fieldNames);
         StringBuilder hashData = new StringBuilder();
         StringBuilder query = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
 
-        for (String fieldName : fieldNames) {
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
             String fieldValue = vnp_Params.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                // Build hash data
-                hashData.append(fieldName).append('=').append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
-                // Build query
-                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII)).append('=')
-                        .append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                String encodedValue = URLEncoder.encode(fieldValue, StandardCharsets.UTF_8).replace("+", "%20");
 
-                if (!fieldName.equals(fieldNames.get(fieldNames.size() - 1))) {
+                hashData.append(fieldName).append('=').append(encodedValue);
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.UTF_8).replace("+", "%20"))
+                        .append('=').append(encodedValue);
+
+                if (itr.hasNext()) {
                     query.append('&');
                     hashData.append('&');
                 }
             }
         }
 
-        // Mã hóa chữ ký
         String queryUrl = query.toString();
         String vnp_SecureHash = VNPayConfig.hmacSHA512(vnPayConfig.getSecretKey(), hashData.toString());
         queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+
+        System.out.println("\n========== 🐞 VNPAY DEBUG 🐞 ==========");
+        System.out.println("Chuỗi dữ liệu gốc (hashData): \n" + hashData.toString());
+        System.out.println("URL thanh toán cuối cùng: \n" + vnPayConfig.getVnp_PayUrl() + "?" + queryUrl);
+        System.out.println("=======================================\n");
 
         return vnPayConfig.getVnp_PayUrl() + "?" + queryUrl;
     }
 
     // --- LOGIC 2: XỬ LÝ IPN KHI VNPAY GỌI VỀ ---
-    public ResponseEntity<?> processIpn(HttpServletRequest request) {
+    public ApiResponse<?> processReturn(HttpServletRequest request) {
         Map<String, String> fields = new HashMap<>();
         for (Enumeration<String> params = request.getParameterNames(); params.hasMoreElements();) {
             String fieldName = params.nextElement();
@@ -88,28 +96,25 @@ public class PaymentService {
         }
 
         String vnp_SecureHash = request.getParameter("vnp_SecureHash");
-        if (fields.containsKey("vnp_SecureHashType")) {
-            fields.remove("vnp_SecureHashType");
-        }
-        if (fields.containsKey("vnp_SecureHash")) {
-            fields.remove("vnp_SecureHash");
-        }
+        fields.remove("vnp_SecureHashType");
+        fields.remove("vnp_SecureHash");
 
-        // Tự hash lại dữ liệu nhận được để đối chiếu
         String signValue = hashAllFields(fields, vnPayConfig.getSecretKey());
 
         if (signValue.equals(vnp_SecureHash)) {
-            // Chữ ký hợp lệ
-            Long orderId = Long.parseLong(fields.get("vnp_TxnRef"));
+            String orderCode = fields.get("vnp_TxnRef");
             String responseCode = fields.get("vnp_ResponseCode");
 
-            // Cập nhật trạng thái
-            PaymentStatus status = "00".equals(responseCode) ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
-            orderService.updatePaymentStatus(orderId, status);
+            if ("00".equals(responseCode)) {
+                orderService.updatePaymentStatus(orderCode, PaymentStatus.COMPLETED);
 
-            return ResponseEntity.ok(Map.of("RspCode", "00", "Message", "Confirm Success"));
+                return ApiResponse.builder().data("Thanh toán thành công").build();
+            } else {
+                orderService.updatePaymentStatus(orderCode, PaymentStatus.FAILED);
+                return ApiResponse.builder().data("Thanh toán thất bại").build();
+            }
         } else {
-            return ResponseEntity.status(400).body(Map.of("RspCode", "97", "Message", "Invalid signature"));
+            return ApiResponse.builder().data("Chữ ký không hợp lệ").build();
         }
     }
 
@@ -118,11 +123,17 @@ public class PaymentService {
         List<String> fieldNames = new ArrayList<>(fields.keySet());
         Collections.sort(fieldNames);
         StringBuilder sb = new StringBuilder();
-        for (String fieldName : fieldNames) {
+        Iterator<String> itr = fieldNames.iterator();
+
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
             String fieldValue = fields.get(fieldName);
             if ((fieldValue != null) && (fieldValue.length() > 0)) {
-                sb.append(fieldName).append("=").append(fieldValue);
-                if (!fieldName.equals(fieldNames.get(fieldNames.size() - 1))) {
+                sb.append(fieldName).append("=");
+
+                sb.append(URLEncoder.encode(fieldValue, StandardCharsets.UTF_8).replace("+", "%20"));
+
+                if (itr.hasNext()) {
                     sb.append("&");
                 }
             }

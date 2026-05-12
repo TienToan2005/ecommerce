@@ -1,6 +1,7 @@
 package com.tientoan21.service;
 
 import com.tientoan21.dto.request.ReviewRequest;
+import com.tientoan21.dto.request.UpdateReview;
 import com.tientoan21.dto.response.ReviewResponse;
 import com.tientoan21.entity.Product;
 import com.tientoan21.entity.Review;
@@ -32,7 +33,7 @@ public class ReviewService {
     private final UserService userService;
     private final ProductRepository productRepository;
     private final OrderRepository orderRepository;
-    private final FileUploadService fileUploadService;
+    private final CloudinaryService cloudinaryService;
 
     @Transactional
     public ReviewResponse createReview(ReviewRequest request, List<MultipartFile> files){
@@ -42,7 +43,7 @@ public class ReviewService {
 
         validateCreateReview(user.getId(), product.getId(), request.rating());
 
-        List<String> imageUrls = (files != null) ? fileUploadService.uploadMultipleFiles(files) : new ArrayList<>();
+        List<String> imageUrls = (files != null) ? cloudinaryService.uploadMultipleFiles(files) : new ArrayList<>();
 
         Review review = Review.builder()
                 .content(request.content())
@@ -76,20 +77,20 @@ public class ReviewService {
         return reviewMapper.toReviewResponse(review);
     }
     @Transactional
-    public ReviewResponse updateReview(Long reviewId, String content, Integer rating){
+    public ReviewResponse updateReview(Long reviewId, UpdateReview req){
         User user = userService.getcurrentUser();
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
 
         validateReviewPermission(review,user);
 
-        if (content != null) {
-            review.setContent(normalizeContent(content));
+        if (req.content() != null) {
+            review.setContent(normalizeContent(req.content()));
         }
 
-        if (rating != null) {
-            validateRating(rating);
-            review.setRating(rating);
+        if (req.rating() != null) {
+            validateRating(req.rating());
+            review.setRating(req.rating());
         }
 
         Review saved = reviewRepository.save(review);

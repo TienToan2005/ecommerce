@@ -1,12 +1,12 @@
 package com.tientoan21.controller;
 
+import com.tientoan21.dto.response.ApiResponse;
+import com.tientoan21.entity.Order;
+import com.tientoan21.service.OrderService;
 import com.tientoan21.service.PaymentService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -14,9 +14,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final OrderService orderService;
 
-    @GetMapping("/vnpay-ipn")
-    public ResponseEntity<?> vnpayIpn(HttpServletRequest request) {
-        return paymentService.processIpn(request);
+    @PostMapping("/create-payment")
+    public ApiResponse<String> createPayment(@RequestParam String orderNumber, HttpServletRequest request) {
+
+        Order order = orderService.getOrderByNumber(orderNumber);
+
+        String vnpayUrl = paymentService.createVnPayPaymentUrl(order, request);
+        return ApiResponse.<String>builder()
+                .data(vnpayUrl)
+                .build();
+    }
+    @GetMapping("/payment-return")
+    public ApiResponse<?> vnpayReturn(HttpServletRequest request) {
+        return paymentService.processReturn(request);
     }
 }

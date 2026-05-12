@@ -20,6 +20,8 @@ public class Category extends BaseEntity{
     private Long id;
 
     private String name;
+    private String image;
+
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
     private List<Product> productList;
 }

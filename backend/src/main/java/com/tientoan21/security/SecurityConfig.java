@@ -30,6 +30,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/payment/payment-return").permitAll()
                         .requestMatchers(
                                 "/api/categories", "/api/categories/**",
                                 "/api/products", "/api/products/**",

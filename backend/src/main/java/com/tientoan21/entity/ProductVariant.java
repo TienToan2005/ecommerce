@@ -23,6 +23,7 @@ public class ProductVariant extends BaseEntity {
     private Long id;
 
     private String sku;
+    private BigDecimal originalPrice;
     private BigDecimal price;
     private int stock;
 

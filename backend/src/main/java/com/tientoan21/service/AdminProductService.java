@@ -37,7 +37,7 @@ public class AdminProductService {
     private final ProductRepository productRepository;
     private  final ProductMapper productMapper;
     private final CategoryRepository categoryRepository;
-    private final FileUploadService fileUploadService;
+    private final CloudinaryService cloudinaryService;
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantMapper productVariantMapper;
     @Transactional
@@ -50,11 +50,11 @@ public class AdminProductService {
 
         String posterUrl = null;
         if(poster != null && !poster.isEmpty()){
-            posterUrl = fileUploadService.uploadFile(poster);
+            posterUrl = cloudinaryService.uploadFile(poster);
         }
         List<String> imageUrls = new ArrayList<>();
         if(images != null && !images.isEmpty()){
-            imageUrls = fileUploadService.uploadMultipleFiles(images);
+            imageUrls = cloudinaryService.uploadMultipleFiles(images);
         }
         product.setPoster(posterUrl);
         product.setImages(imageUrls);
@@ -111,14 +111,14 @@ public class AdminProductService {
         productMapper.updateProductFromRequest(request, product);
         if (poster != null && !poster.isEmpty()) {
             if (product.getPoster() != null) {
-                   fileUploadService.deleteFile(product.getPoster());
+                   cloudinaryService.deleteFile(product.getPoster());
             }
-            String posterUrl = fileUploadService.uploadFile(poster);
+            String posterUrl = cloudinaryService.uploadFile(poster);
             product.setPoster(posterUrl);
 
         }
         if (images != null && !images.isEmpty()) {
-            List<String> imageUrls = fileUploadService.uploadMultipleFiles(images);
+            List<String> imageUrls = cloudinaryService.uploadMultipleFiles(images);
             product.setImages(imageUrls);
         }
 

@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 public class ProductVariantResponse {
     private Long id;
     private BigDecimal price;
+    private BigDecimal originalPrice;
     private int stock;
     private ProductStatus status;
     private String sku;

@@ -14,7 +14,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class FileUploadService {
+public class CloudinaryService {
     private final Cloudinary cloudinary;
 
     public String uploadFile(MultipartFile file){
