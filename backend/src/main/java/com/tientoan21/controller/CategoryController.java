@@ -1,9 +1,9 @@
 package com.tientoan21.controller;
 
 import com.tientoan21.dto.response.ApiResponse;
+import com.tientoan21.dto.response.CategoryFilterResponse;
 import com.tientoan21.dto.response.CategoryResponse;
 import com.tientoan21.service.CategoryService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +38,12 @@ public class CategoryController {
     public ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id){
         return ApiResponse.<CategoryResponse>builder()
                 .data(categoryService.getCategoryById(id))
+                .build();
+    }
+    @GetMapping("/{id}/filters")
+    public ApiResponse<CategoryFilterResponse> getCategoryFilters(@PathVariable Long id) {
+        return ApiResponse.<CategoryFilterResponse>builder()
+                .data(categoryService.getCategoryFilters(id))
                 .build();
     }
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

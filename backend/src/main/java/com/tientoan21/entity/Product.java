@@ -47,4 +47,7 @@ public class Product extends BaseEntity {
 
     @Formula("(SELECT COUNT(*) FROM reviews r WHERE r.product_id = id AND r.deleted_at IS NULL)")
     private Integer totalReviews;
+
+    @Formula("(SELECT MIN(v.price) FROM product_variants v WHERE v.product_id = id)")
+    private BigDecimal minPrice;
 }

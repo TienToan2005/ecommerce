@@ -1,9 +1,11 @@
 package com.tientoan21.service;
 
+import com.tientoan21.dto.response.CategoryFilterResponse;
 import com.tientoan21.dto.response.CategoryResponse;
 import com.tientoan21.entity.Category;
 import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.exception.AppException;
+import com.tientoan21.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import com.tientoan21.mapper.CategoryMapper;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
     private final CloudinaryService cloudinaryService;
+    private final ProductRepository productRepository;
+
     public CategoryResponse create(String name, MultipartFile file) {
         if(categoryRepository.existsCategoryByName(name)){
             throw new AppException(ErrorCode.CATEGORY_EXISTS);
@@ -71,5 +75,11 @@ public class CategoryService {
 
         category.setDeletedAt(LocalDateTime.now());
     }
+    public CategoryFilterResponse getCategoryFilters(Long categoryId) {
+        List<String> brands = productRepository.findDistinctBrandsByCategoryId(categoryId);
 
+        return CategoryFilterResponse.builder()
+                .brands(brands)
+                .build();
+    }
 }

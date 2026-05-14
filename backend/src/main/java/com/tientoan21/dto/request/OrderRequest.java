@@ -16,6 +16,7 @@ public record OrderRequest(
          String paymentMethod,
         @Valid
         @NotEmpty(message = "Order must contain at least one item")
-         List<OrderItemRequest> orderItemList
+         List<OrderItemRequest> orderItemList,
+        String voucherCode
 ) {
 }

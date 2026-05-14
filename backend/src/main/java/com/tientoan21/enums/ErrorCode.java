@@ -26,7 +26,12 @@ public enum ErrorCode {
     INVALID_OTP(1014,HttpStatus.BAD_REQUEST,"INVALID_OTP"),
     USER_ALREADY_VERIFIED(1015,HttpStatus.BAD_REQUEST, "USER_ALREADY_VERIFIED"),
     OTP_EXPIRED(1016,HttpStatus.BAD_REQUEST,"OTP_EXPIRED"),
-    CANNOT_BLOCK_ADMIN(1017,HttpStatus.BAD_REQUEST, "CANNOT_BLOCK_ADMIN");
+    CANNOT_BLOCK_ADMIN(1017,HttpStatus.BAD_REQUEST, "CANNOT_BLOCK_ADMIN"),
+    UNAUTHENTICATED(1018,HttpStatus.UNAUTHORIZED,"Invalid token"),
+    VOUCHER_NOT_FOUND(1019,HttpStatus.NOT_FOUND,"Voucher not found"),
+    VOUCHER_EXPIRED(1020,HttpStatus.BAD_REQUEST,"The discount code has expired!"),
+    VOUCHER_OUT_OF_STOCK(1021,HttpStatus.BAD_REQUEST,"The discount code has expired!"),
+    ORDER_NOT_QUALIFIED(1022, HttpStatus.BAD_REQUEST,"Your order has not reached the minimum value required to apply this code");
     private int code;
     private HttpStatus status;
     private String message;

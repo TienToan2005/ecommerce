@@ -5,6 +5,8 @@ import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.dto.response.RefreshTokenResponse;
 import com.tientoan21.dto.response.TokenResponse;
 import com.tientoan21.dto.response.UserResponse;
+import com.tientoan21.enums.ErrorCode;
+import com.tientoan21.exception.AppException;
 import jakarta.servlet.http.HttpServletResponse; // <--- Cần import cái này
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,10 +47,10 @@ public class AuthController {
     @PostMapping("/refresh")
     public ApiResponse<RefreshTokenResponse> refresh(
             @CookieValue(name = "refreshToken", required = false) String refreshToken,
-            HttpServletResponse response //
+            HttpServletResponse response
     ){
-        if (refreshToken == null || refreshToken.isBlank()) {
-            throw new RuntimeException("Refresh token is missing or invalid");
+        if (refreshToken == null || refreshToken.isEmpty()) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
         return ApiResponse.<RefreshTokenResponse>builder()

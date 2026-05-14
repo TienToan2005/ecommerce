@@ -19,6 +19,7 @@ public class PaymentService {
 
     private final VNPayConfig vnPayConfig;
     private final OrderService orderService;
+    private final VoucherService voucherService;
 
     // --- LOGIC 1: TẠO LINK THANH TOÁN ---
     public String createVnPayPaymentUrl(Order order, HttpServletRequest request) {
@@ -107,7 +108,7 @@ public class PaymentService {
 
             if ("00".equals(responseCode)) {
                 orderService.updatePaymentStatus(orderCode, PaymentStatus.COMPLETED);
-
+                voucherService.subtractionVoucher(orderCode);
                 return ApiResponse.builder().data("Thanh toán thành công").build();
             } else {
                 orderService.updatePaymentStatus(orderCode, PaymentStatus.FAILED);

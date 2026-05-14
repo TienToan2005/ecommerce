@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import com.tientoan21.dto.response.VoucherResponse;
 import com.tientoan21.entity.*;
 import com.tientoan21.repository.ProductVariantRepository;
+import com.tientoan21.repository.VoucherRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -41,6 +43,8 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final CartService cartService;
     private final ProductVariantRepository productVariantRepository;
+    private final VoucherService voucherService;
+    private final VoucherRepository voucherRepository;
 
     @Lazy
     @Autowired
@@ -63,13 +67,26 @@ public class OrderService {
         List<OrderItem> orderItems = processOrderItems(request.orderItemList(), order);
         order.setOrderItemList(orderItems);
 
-        BigDecimal grandTotal = orderItems.stream()
+        BigDecimal totalPrice = orderItems.stream()
                 .map(item -> item.getPrice()
                         .multiply(BigDecimal.valueOf(item.getQuantity()))
-                        .subtract(item.getDiscount_amount() != null ? item.getDiscount_amount() : BigDecimal.ZERO))
+                        .subtract(item.getDiscountAmount() != null ? item.getDiscountAmount() : BigDecimal.ZERO))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        order.setTotalPrice(grandTotal);
+        order.setTotalPrice(totalPrice);
+
+        BigDecimal grandTotal = totalPrice;
+        BigDecimal voucherDiscount = BigDecimal.ZERO;
+        if (request.voucherCode() != null && !request.voucherCode().trim().isEmpty()) {
+            VoucherResponse checkRes = voucherService.checkVoucher(request.voucherCode().trim(), totalPrice);
+
+            voucherDiscount = checkRes.getCalculatedDiscount();
+            grandTotal = totalPrice.subtract(voucherDiscount);
+
+            order.setVoucherCode(request.voucherCode().trim());
+            order.setVoucherDiscount(voucherDiscount);
+        }
+        order.setGrandTotal(grandTotal);
 
         PaymentMethod method = parsePaymentMethod(request.paymentMethod());
         Payment payment = Payment.builder()
@@ -115,7 +132,7 @@ public class OrderService {
                     .productVariant(variant)
                     .quantity(itemRequest.quantity())
                     .price(variant.getPrice())
-                    .discount_amount(itemRequest.discount_amount())
+                    .discountAmount(itemRequest.discount_amount())
                     .build();
 
         }).toList();
@@ -211,5 +228,4 @@ public class OrderService {
     public Order getOrderByNumber(String orderNumber) {
         return orderRepository.findByOrderNumber(orderNumber).orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
     }
-
 }

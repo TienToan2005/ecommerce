@@ -32,6 +32,10 @@ public class Order extends BaseEntity{
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    private String voucherCode;
+    private BigDecimal voucherDiscount;
+    private BigDecimal grandTotal;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

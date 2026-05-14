@@ -30,10 +30,10 @@ public class ProductService {
     }
     @Transactional(readOnly = true)
     public Page<ProductResponse> filterProducts(FilterProductsRequest request,Pageable pageable){
-        Specification<Product> spec = Specification
-                .where(ProductSpecification.hasName(request.name()))
+        Specification<Product> spec = Specification.where(ProductSpecification.hasName(request.name()))
                 .and(ProductSpecification.hasCategory(request.categoryId()))
-                .and(ProductSpecification.hasPriceBetween(request.minPrice(), request.maxPrice()));
+                .and(ProductSpecification.hasPriceBetween(request.minPrice(), request.maxPrice()))
+                .and(ProductSpecification.hasBrand(request.brand()));
 
         Page<Product> products = productRepository.findAll(spec, pageable);
 
