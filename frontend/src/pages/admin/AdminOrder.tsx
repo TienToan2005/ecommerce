@@ -53,15 +53,22 @@ const AdminOrder: React.FC = () => {
       toast.error('Có lỗi xảy ra, không thể thay đổi trạng thái!');
     }
   };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'PENDING': return <span className="flex items-center justify-center gap-1.5 text-yellow-700 bg-yellow-50 border border-yellow-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Clock size={14}/> Chờ xác nhận</span>;
-      case 'PROCESSING': return <span className="flex items-center justify-center gap-1.5 text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Package size={14}/> Chuẩn bị hàng</span>;
-      case 'SHIPPED': return <span className="flex items-center justify-center gap-1.5 text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Truck size={14}/> Đang giao</span>;
-      case 'DELIVERED': return <span className="flex items-center justify-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><CheckCircle2 size={14}/> Đã giao</span>;
-      case 'CANCELLED': return <span className="flex items-center justify-center gap-1.5 text-red-700 bg-red-50 border border-red-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><XCircle size={14}/> Đã hủy</span>;
-      default: return <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-md text-xs font-bold w-full text-center">{status}</span>;
+      case 'PENDING': 
+        return <span className="flex items-center justify-center gap-1.5 text-yellow-700 bg-yellow-50 border border-yellow-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Clock size={14}/> Chờ xác nhận</span>;
+      case 'CONFIRMED': 
+        return <span className="flex items-center justify-center gap-1.5 text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><CheckCircle2 size={14}/> Đã xác nhận</span>;
+      case 'PROCESSING': 
+        return <span className="flex items-center justify-center gap-1.5 text-orange-700 bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Package size={14}/> Chuẩn bị hàng</span>;
+      case 'SHIPPED': 
+        return <span className="flex items-center justify-center gap-1.5 text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Truck size={14}/> Đang giao</span>;
+      case 'DELIVERED': 
+        return <span className="flex items-center justify-center gap-1.5 text-emerald-700 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><CheckCircle2 size={14}/> Đã giao</span>;
+      case 'CANCELLED': 
+        return <span className="flex items-center justify-center gap-1.5 text-red-700 bg-red-50 border border-red-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><XCircle size={14}/> Đã hủy</span>;
+      default: 
+        return <span className="text-gray-500 bg-gray-100 border border-gray-200 px-2 py-1 rounded-md text-xs font-bold w-full text-center">{status}</span>;
     }
   };
 

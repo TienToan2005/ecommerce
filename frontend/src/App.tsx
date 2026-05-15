@@ -14,18 +14,20 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Cart from './pages/cart/Cart';
 import ProductDetail from './pages/product/ProductDetail';
+import ProductListPage from './pages/product/ProductListPage'; 
 import SearchPage from './pages/SearchPage';
-import VNPayReturn from './components/VNPayReturn';
-
+import PaymentReturn from './pages/PaymentReturn';
 import ProfilePage from './pages/ProfilePage';
 import OrderHistory from './pages/order/OrderHistory';
 import OrderDetail from './pages/order/OrderDetail';
 import Checkout from './pages/order/Checkout';
+import ForgotPassword from './pages/auth/ForgotPassword';
 
 import Dashboard from './pages/admin/Dashboard';
 import AdminOrder from './pages/admin/AdminOrder';
 import AdminProduct from './pages/admin/AdminProduct';
 import AdminCustomer from './pages/admin/AdminCustomer';
+import AdminVoucher from './pages/admin/AdminVoucher';
 
 const ProtectedRoute = () => {
   const { isAuthenticated, loading } = useAuthStore();
@@ -63,16 +65,19 @@ const App: React.FC = () => {
         <Route element={<MainLayout />}>
           
           <Route path="/" element={<Home />} />
+          <Route path="/products" element={<ProductListPage />} />
+          
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/search" element={<SearchPage />} />
-
+          <Route path="/payment-return" element={<PaymentReturn />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/vnpay-return" element={<VNPayReturn />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-history/:id" element={<OrderDetail />} />
           </Route>
@@ -87,6 +92,7 @@ const App: React.FC = () => {
             <Route path="orders" element={<AdminOrder />} />
             <Route path="products" element={<AdminProduct />} />
             <Route path="users" element={<AdminCustomer />} />
+            <Route path="vouchers" element={<AdminVoucher />} />
           </Route>
         </Route>
 

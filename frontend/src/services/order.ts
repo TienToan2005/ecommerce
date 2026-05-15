@@ -31,8 +31,3 @@ export const cancelOrder = async (id: number): Promise<OrderResponse> => {
     const res = await api.delete<ApiResponse<OrderResponse>>(`/orders/${id}`);
     return res.data.data;
 };
-
-export const verifyVnPayPayment = async (queryString: string): Promise<OrderResponse> => {
-    const res = await api.get<ApiResponse<OrderResponse>>(`/orders/vnpay/return?query=${encodeURIComponent(queryString)}`);
-    return res.data.data; 
-};

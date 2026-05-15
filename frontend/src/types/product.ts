@@ -8,6 +8,7 @@ export interface ProductVariantRequest {
   productId: number;
   sku: string;
   price: string;
+  originalPrice?: number;
   stock: number;
   attributes?: Record<string, string>;
 }

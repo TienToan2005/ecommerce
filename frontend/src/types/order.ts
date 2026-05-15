@@ -5,6 +5,7 @@ export interface OrderRequest {
   userId: number;
   addressId: number;
   paymentMethod: string;
+  voucherCode?: string;
   orderItemList: OrderItemRequest[];
 }
 

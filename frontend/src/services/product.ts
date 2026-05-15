@@ -10,6 +10,7 @@ export interface ProductQueryParams {
     categoryId?: number | string;
     minPrice?: number;
     maxPrice?: number;
+    brand?: string
 }
 
 export const getAllProducts = async (params?: ProductQueryParams): Promise<Page<ProductResponse>> => {

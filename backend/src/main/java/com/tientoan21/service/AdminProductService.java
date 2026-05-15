@@ -16,6 +16,8 @@ import com.tientoan21.repository.CategoryRepository;
 import com.tientoan21.repository.ProductRepository;
 import com.tientoan21.repository.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,8 +33,6 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/products")
-@PreAuthorize("hasRole('ADMIN')")
 public class AdminProductService {
     private final ProductRepository productRepository;
     private  final ProductMapper productMapper;
@@ -40,7 +40,9 @@ public class AdminProductService {
     private final CloudinaryService cloudinaryService;
     private final ProductVariantRepository productVariantRepository;
     private final ProductVariantMapper productVariantMapper;
+
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(ProductRequest request, MultipartFile poster, List<MultipartFile> images){
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -77,6 +79,10 @@ public class AdminProductService {
         return productMapper.toProductResponse(saved);
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product_detail", key = "#productId")
+    })
     public ProductVariantResponse addVariantToProduct(Long productId, ProductVariantRequest request){
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -94,10 +100,13 @@ public class AdminProductService {
     }
     public Page<ProductResponse> getAllProducts(Pageable pageable){
         Page<Product> products = productRepository.findAll(pageable);
-
         return products.map(productMapper::toProductResponse);
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product_detail", key = "#id")
+    })
     public ProductResponse updateProductById(Long id, ProductRequest request, MultipartFile poster, List<MultipartFile> images){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -111,11 +120,10 @@ public class AdminProductService {
         productMapper.updateProductFromRequest(request, product);
         if (poster != null && !poster.isEmpty()) {
             if (product.getPoster() != null) {
-                   cloudinaryService.deleteFile(product.getPoster());
+                cloudinaryService.deleteFile(product.getPoster());
             }
             String posterUrl = cloudinaryService.uploadFile(poster);
             product.setPoster(posterUrl);
-
         }
         if (images != null && !images.isEmpty()) {
             List<String> imageUrls = cloudinaryService.uploadMultipleFiles(images);
@@ -127,6 +135,7 @@ public class AdminProductService {
     }
 
     @Transactional
+    @CacheEvict(value = {"products", "product_detail"}, allEntries = true)
     public ProductVariantResponse updateVariant(Long variantId, ProductVariantRequest request){
         ProductVariant variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new AppException(ErrorCode.VARIANT_NOT_FOUND));
@@ -139,6 +148,10 @@ public class AdminProductService {
         return productVariantMapper.toProductVariantResponse(updatedVariant);
     }
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product_detail", key = "#id")
+    })
     public void deleteProductById(Long id){
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -146,6 +159,7 @@ public class AdminProductService {
         product.setDeletedAt(LocalDateTime.now());
     }
     @Transactional
+    @CacheEvict(value = {"products", "product_detail"}, allEntries = true)
     public void deleteVariant(Long variantId){
         ProductVariant variant = productVariantRepository.findById(variantId)
                 .orElseThrow(() -> new AppException(ErrorCode.VARIANT_NOT_FOUND));

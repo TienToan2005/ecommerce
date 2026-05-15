@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,7 +45,7 @@ public class OrderService {
     private final CartService cartService;
     private final ProductVariantRepository productVariantRepository;
     private final VoucherService voucherService;
-    private final VoucherRepository voucherRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Lazy
     @Autowired
@@ -109,6 +110,9 @@ public class OrderService {
             String paymentUrl = paymentService.createVnPayPaymentUrl(savedOrder, httpServletRequest);
             response.getPaymentInfo().setPaymentUrl(paymentUrl);
         }
+
+        String message = "TING_TING: Đơn hàng mới " + order.getOrderNumber() + " vừa thanh toán thành công!";
+        messagingTemplate.convertAndSend("/topic/admin-notifications", message);
         return response;
     }
 

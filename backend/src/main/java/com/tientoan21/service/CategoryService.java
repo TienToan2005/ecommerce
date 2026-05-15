@@ -8,6 +8,8 @@ import com.tientoan21.exception.AppException;
 import com.tientoan21.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import com.tientoan21.mapper.CategoryMapper;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.tientoan21.repository.CategoryRepository;
@@ -24,6 +26,7 @@ public class CategoryService {
     private final CloudinaryService cloudinaryService;
     private final ProductRepository productRepository;
 
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse create(String name, MultipartFile file) {
         if(categoryRepository.existsCategoryByName(name)){
             throw new AppException(ErrorCode.CATEGORY_EXISTS);
@@ -39,6 +42,7 @@ public class CategoryService {
 
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
+    @Cacheable(value = "categories")
     public List<CategoryResponse> getALlCategory(){
         List<Category> categories = categoryRepository.findAll();
 
@@ -51,6 +55,7 @@ public class CategoryService {
         return categoryMapper.toCategoryResponse(category);
     }
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse updateCategory(Long id, String name, MultipartFile file) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
@@ -69,6 +74,7 @@ public class CategoryService {
         return categoryMapper.toCategoryResponse(saved);
     }
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long id){
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));

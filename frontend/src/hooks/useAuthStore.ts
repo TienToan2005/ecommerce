@@ -31,19 +31,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   openAuthModal: () => set({ isAuthModalOpen: true, error: null }),
   closeAuthModal: () => set({ isAuthModalOpen: false, error: null }),
 
-  loginAction: async (data: LoginRequest) => {
+loginAction: async (data: LoginRequest) => {
     set({ loading: true, error: null });
     try {
-      // API Login giờ chỉ trả về accessToken trong Body JSON
-      // Còn refreshToken đã được Backend tự động nhét vào HttpOnly Cookie
       const result = await userApi.loginUser(data);
       
-      // 1. Lưu accessToken vào State (Memory)
       set({ accessToken: result.accessToken });
-      
       useCartStore.getState().clearCartUI();
 
-      // 2. Lấy thông tin User (Axios Interceptor sẽ tự động đính kèm accessToken từ State)
       const userProfile = await userApi.getProfile();
       
       set({ 
@@ -58,13 +53,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     } catch (error: unknown) {
       set({ loading: false });
+      
       if (axios.isAxiosError(error)) {
-          toast.error(error.response?.data?.message || 'Lỗi mạng hoặc sai tài khoản!');
+        const backendMessage = error.response?.data?.message?.toLowerCase() || '';
+
+        if (backendMessage.includes('user not found')) {
+            toast.error('Tài khoản không tồn tại trên hệ thống!');
+        } 
+        else if (backendMessage.includes('password does not match') || backendMessage.includes('credentials')) {
+            toast.error('Sai mật khẩu! Bạn vui lòng kiểm tra lại nhé.');
+        } 
+        else if (backendMessage.includes('verified') || backendMessage.includes('enabled')) {
+            toast.error('Tài khoản chưa được xác thực email!');
+        } 
+        else {
+            toast.error(error.response?.data?.message || 'Sai thông tin đăng nhập!');
+        }
       } else if (error instanceof Error) {
-          toast.error(error.message);
+        toast.error(error.message);
       } else {
-          toast.error('Đã xảy ra lỗi không xác định!');
+        toast.error('Đã xảy ra lỗi không xác định!');
       }
+      
+      throw error; 
     }
   },
 

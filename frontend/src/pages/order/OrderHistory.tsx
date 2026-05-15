@@ -43,7 +43,7 @@ const OrderHistory: React.FC = () => {
       setCancelingId(orderId);
       await orderApi.cancelOrder(orderId);
       toast.success('Hủy đơn hàng thành công!');
-      fetchOrders(); // Tải lại danh sách
+      fetchOrders();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Hủy đơn thất bại!');
     } finally {
@@ -51,22 +51,23 @@ const OrderHistory: React.FC = () => {
     }
   };
 
-  // --- HÀM TẠO MÀU SẮC CHO TRẠNG THÁI ---
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING':
-        return <span className="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-3 py-1 rounded-full text-sm font-medium"><Clock size={16}/> Chờ xác nhận</span>;
+        return <span className="flex items-center gap-1.5 text-yellow-600 bg-yellow-50 border border-yellow-200 px-3 py-1.5 rounded-full text-sm font-medium"><Clock size={16}/> Chờ xác nhận</span>;
+      case 'CONFIRMED':
+        return <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full text-sm font-medium"><CheckCircle2 size={16}/> Đã xác nhận</span>;
       case 'PROCESSING':
-        return <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-3 py-1 rounded-full text-sm font-medium"><Package size={16}/> Đang chuẩn bị hàng</span>;
+        return <span className="flex items-center gap-1.5 text-orange-600 bg-orange-50 border border-orange-200 px-3 py-1.5 rounded-full text-sm font-medium"><Package size={16}/> Đang chuẩn bị hàng</span>;
       case 'SHIPPED':
-        return <span className="flex items-center gap-1 text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full text-sm font-medium"><Truck size={16}/> Đang giao hàng</span>;
+        return <span className="flex items-center gap-1.5 text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-full text-sm font-medium"><Truck size={16}/> Đang giao hàng</span>;
       case 'DELIVERED':
       case 'COMPLETED':
-        return <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-sm font-medium"><CheckCircle2 size={16}/> Đã giao hàng</span>;
+        return <span className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full text-sm font-medium"><CheckCircle2 size={16}/> Đã giao hàng</span>;
       case 'CANCELLED':
-        return <span className="flex items-center gap-1 text-red-600 bg-red-50 px-3 py-1 rounded-full text-sm font-medium"><XCircle size={16}/> Đã hủy</span>;
+        return <span className="flex items-center gap-1.5 text-red-600 bg-red-50 border border-red-200 px-3 py-1.5 rounded-full text-sm font-medium"><XCircle size={16}/> Đã hủy</span>;
       default:
-        return <span className="text-gray-500 bg-gray-100 px-3 py-1 rounded-full text-sm">{status}</span>;
+        return <span className="text-gray-500 bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-full text-sm font-medium">{status}</span>;
     }
   };
 
@@ -89,15 +90,15 @@ const OrderHistory: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {orders.map((order) => (
-              <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
                 
                 {/* HEADER CỦA ĐƠN HÀNG */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50 gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b border-gray-100 bg-gray-50/50 gap-3">
                   <div className="flex items-center gap-3">
                     <span className="font-bold text-gray-800">Mã ĐH: #{order.orderNumber}</span>
                     <span className="text-gray-400 text-sm hidden sm:inline">|</span>
                     {order.createdAt && (
-                      <span className="text-gray-500 text-sm">
+                      <span className="text-gray-500 text-sm font-medium">
                         {new Date(order.createdAt).toLocaleDateString('vi-VN')}
                       </span>
                     )}
@@ -110,7 +111,6 @@ const OrderHistory: React.FC = () => {
                   {order.orderItems?.map((item: any) => (
                     <div key={item.id} className="flex gap-4 pb-4 border-b border-dashed border-gray-100 last:border-0 last:pb-0">
                       <div className="w-20 h-20 bg-gray-50 rounded-lg border border-gray-100 p-2 flex-shrink-0">
-                        {/* Lưu ý: Thay đổi đường dẫn ảnh cho khớp với DTO Backend của sếp */}
                         <img src={item.product?.poster || item.product?.images?.[0] || 'https://placehold.co/100x100?text=No+Image'} alt="product" className="w-full h-full object-contain" />
                       </div>
                       <div className="flex-1 flex flex-col justify-between">
@@ -128,13 +128,13 @@ const OrderHistory: React.FC = () => {
                 </div>
 
                 {/* FOOTER: TỔNG TIỀN VÀ NÚT ACTION */}
-                <div className="p-4 bg-red-50/30 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
-                  <div className="text-sm text-gray-600 flex flex-col">
-                    <span>Thanh toán: <strong className="text-gray-800">{order.paymentInfo?.method}</strong></span>
+                <div className="p-4 bg-red-50/10 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
+                  <div className="text-sm text-gray-600 flex flex-col gap-1">
+                    <span>Phương thức: <strong className="text-gray-800 uppercase">{order.paymentInfo?.method}</strong></span>
                     {order.paymentInfo?.status === 'COMPLETED' ? (
-                      <span className="text-emerald-600 text-xs font-medium">Đã thanh toán</span>
+                      <span className="text-emerald-600 text-sm font-semibold flex items-center gap-1"><CheckCircle2 size={16}/> Đã thanh toán</span>
                     ) : (
-                      <span className="text-yellow-600 text-xs font-medium">Chưa thanh toán</span>
+                      <span className="text-yellow-600 text-sm font-semibold flex items-center gap-1"><Clock size={16}/> Chưa thanh toán</span>
                     )}
                   </div>
                   
@@ -145,7 +145,6 @@ const OrderHistory: React.FC = () => {
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
-                      {/* Chỉ hiển thị nút Hủy khi đơn hàng đang ở trạng thái PENDING */}
                       {order.status === 'PENDING' && (
                         <button 
                           onClick={() => handleCancelOrder(order.id)}

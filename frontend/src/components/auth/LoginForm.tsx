@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import toast from 'react-hot-toast';
+import { Link } from 'react-router-dom';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -18,7 +19,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       toast.success('Đăng nhập thành công!');
       if (onSuccess) onSuccess();
     } catch (err) {
-      // Lỗi đã được xử lý trong useAuthStore, chỉ cần catch để không bị crash
+      // Lỗi đã được xử lý trong useAuthStore và ném ra đây để chặn luồng
     }
   };
 
@@ -34,6 +35,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
         <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-600 focus:outline-none" placeholder="••••••••" />
+        
+        <div className="flex justify-end mt-2">
+          <Link to="/forgot-password" className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-all">
+            Quên mật khẩu?
+          </Link>
+        </div>
       </div>
       
       <button type="submit" disabled={loading} className={`w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition-colors mt-4 shadow-lg shadow-red-600/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>

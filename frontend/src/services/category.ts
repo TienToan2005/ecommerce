@@ -4,8 +4,12 @@ import type {CategoryRequest, CategoryResponse} from '../types/category';
 
 const BASE_URL = '/categories';
 
-export const createCategory = async (data: CategoryRequest): Promise<CategoryResponse> => {
-  const res = await api.post<ApiResponse<CategoryResponse>>(BASE_URL, data);
+export const createCategory = async (formData: FormData): Promise<CategoryResponse> => {
+  const res = await api.post<ApiResponse<CategoryResponse>>(BASE_URL, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return res.data.data;
 };
 
@@ -17,6 +21,11 @@ export const getAllCategories = async (): Promise<CategoryResponse[]> => {
 export const getCategoryById = async (id: number): Promise<CategoryResponse> => {
   const res = await api.get<ApiResponse<CategoryResponse>>(`${BASE_URL}/${id}`);
   return res.data.data;
+};
+
+export const getCategoryFilters = async (id: number) => {
+  const response = await api.get(`/categories/${id}/filters`);
+  return response.data.data;
 };
 
 export const updateCategory = async (id: number, data: CategoryRequest): Promise<CategoryResponse> => {

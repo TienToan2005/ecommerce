@@ -15,6 +15,12 @@ services:
     networks:
       - app-network
 
+  redis-cache:
+    image: redis:alpine
+    container_name: redis_ecommerce
+    networks:
+      - app-network
+
   backend:
     build: ./backend
     container_name: spring-backend
@@ -24,13 +30,26 @@ services:
       - .env 
     environment:
       - DB_HOST=postgres-db 
+      - REDIS_HOST=redis-cache
     depends_on:
       - postgres-db
+      - redis-cache
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: react-frontend
+    ports:
+      - "80:80" 
+    depends_on:
+      - backend
     networks:
       - app-network
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
   app-network:
