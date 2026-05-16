@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, User as UserIcon, Mail, Phone, Calendar } from 'lucide-react';
-import { getProfile } from '../services/auth';
-import type { UserResponse } from '../types/user';
+import { getProfile } from '../../services/auth';
+import type { UserResponse } from '../../types/user';
 import toast from 'react-hot-toast';
+import EditProfileModal from './EditProfileModal';
 
 const Profile: React.FC = () => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,8 +41,12 @@ const Profile: React.FC = () => {
         
         {/* Header Profile */}
         <div className="bg-red-600 px-8 py-10 text-white flex items-center gap-6">
-          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg">
-            <span className="text-4xl font-black text-red-600">{user.fullName.charAt(0)}</span>
+          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+            {user.avatar ? (
+              <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-4xl font-black text-red-600">{user.fullName.charAt(0)}</span>
+            )}
           </div>
           <div>
             <h1 className="text-3xl font-bold">{user.fullName}</h1>
@@ -54,7 +61,6 @@ const Profile: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Thông tin cá nhân</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Họ Tên */}
             <div className="flex items-start gap-4">
               <div className="p-3 bg-red-50 text-red-600 rounded-xl"><UserIcon size={24} /></div>
               <div>
@@ -63,7 +69,6 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Email */}
             <div className="flex items-start gap-4">
               <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Mail size={24} /></div>
               <div>
@@ -72,16 +77,14 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Số điện thoại */}
             <div className="flex items-start gap-4">
               <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><Phone size={24} /></div>
               <div>
                 <p className="text-sm font-semibold text-gray-500">Số điện thoại</p>
-                <p className="text-lg font-medium text-gray-900">{user.phoneNumber}</p>
+                <p className="text-lg font-medium text-gray-900">{user.phoneNumber || 'Chưa cập nhật'}</p>
               </div>
             </div>
 
-            {/* Ngày sinh */}
             <div className="flex items-start gap-4">
               <div className="p-3 bg-purple-50 text-purple-600 rounded-xl"><Calendar size={24} /></div>
               <div>
@@ -93,15 +96,24 @@ const Profile: React.FC = () => {
             </div>
           </div>
           
-          {/* Nút cập nhật (Sếp có thể phát triển thêm Modal Edit Profile ở đây) */}
           <div className="mt-10 flex justify-end">
-             <button className="bg-gray-100 text-gray-700 font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-colors">
+             <button 
+                onClick={() => setIsEditModalOpen(true)}
+                className="bg-gray-100 text-gray-700 font-semibold px-6 py-2.5 rounded-lg hover:bg-gray-200 transition-colors"
+             >
                Chỉnh sửa thông tin
              </button>
           </div>
         </div>
-
       </div>
+
+      {isEditModalOpen && (
+        <EditProfileModal 
+          user={user} 
+          onClose={() => setIsEditModalOpen(false)} 
+          onUpdateSuccess={(updatedUser) => setUser(updatedUser)} 
+        />
+      )}
     </div>
   );
 };

@@ -8,7 +8,10 @@ export const loginUser = async (data: LoginRequest): Promise<TokenResponse> => {
   const res = await api.post<ApiResponse<TokenResponse>>('/auth/login', data);
   return res.data.data;
 };
-
+export const googleLogin = async (credential: string): Promise<TokenResponse> => {
+  const res = await api.post<ApiResponse<TokenResponse>>('/auth/google', { credential });
+  return res.data.data;
+};
 export const registerUser = async (data: RegisterRequest): Promise<UserResponse> => {
   const res = await api.post<ApiResponse<UserResponse>>('/auth/register', data);
   return res.data.data;
@@ -51,5 +54,9 @@ export const logoutUser = async () => {
 // --- USER ---
 export const getProfile = async (): Promise<UserResponse> => {
   const res = await api.get<ApiResponse<UserResponse>>('/users/profile');
+  return res.data.data;
+}
+export const updateProfile = async (formData: FormData): Promise<UserResponse> => {
+  const res = await api.put<ApiResponse<UserResponse>>('/users/profile', formData);
   return res.data.data;
 }

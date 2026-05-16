@@ -42,7 +42,6 @@ public class CategoryService {
 
         return categoryMapper.toCategoryResponse(categoryRepository.save(category));
     }
-    @Cacheable(value = "categories")
     public List<CategoryResponse> getALlCategory(){
         List<Category> categories = categoryRepository.findAll();
 

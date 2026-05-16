@@ -17,7 +17,7 @@ import ProductDetail from './pages/product/ProductDetail';
 import ProductListPage from './pages/product/ProductListPage'; 
 import SearchPage from './pages/SearchPage';
 import PaymentReturn from './pages/PaymentReturn';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/profile/ProfilePage';
 import OrderHistory from './pages/order/OrderHistory';
 import OrderDetail from './pages/order/OrderDetail';
 import Checkout from './pages/order/Checkout';

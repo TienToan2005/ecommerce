@@ -34,10 +34,10 @@ export interface ResetPasswordRequest {
 }
 
 export interface UserRequest {
-    fullName?: string;
+    fullName: string;
     email: string;
     phoneNumber: string;
-    password?: string;
+    password: string;
     role?: string;
     address?: string;
     birthday?: string;
@@ -48,4 +48,5 @@ export interface UserResponse extends Omit<UserRequest, 'password'> {
     role: string;
     status: string;
     createdAt?: string;
+    avatar?: string;
 }

@@ -28,6 +28,12 @@ public class AuthController {
                 .data(authService.login(request, response))
                 .build();
     }
+    @PostMapping("/google")
+    public ApiResponse<TokenResponse> googleLogin(@RequestBody GoogleLoginRequest request, HttpServletResponse response) {
+        return ApiResponse.<TokenResponse>builder()
+                .data(authService.googleLogin(request, response))
+                .build();
+    }
 
     @PostMapping("/register")
     public ApiResponse<UserResponse> register(@RequestBody @Valid RegisterRequest request){

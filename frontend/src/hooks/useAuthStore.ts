@@ -18,6 +18,7 @@ interface AuthState {
   loginAction: (data: LoginRequest) => Promise<void>;
   logout: () => Promise<void>; 
   checkAuth: () => Promise<void>;
+  setGoogleAuth: (accessToken: string) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -78,15 +79,35 @@ loginAction: async (data: LoginRequest) => {
       throw error; 
     }
   },
+  setGoogleAuth: async (accessToken: string) => {
+    set({ loading: true, error: null });
+    try {
+      set({ accessToken: accessToken });
+      useCartStore.getState().clearCartUI();
 
+      const userProfile = await userApi.getProfile();
+      
+      set({ 
+        isAuthenticated: true, 
+        user: userProfile, 
+        isAuthModalOpen: false, 
+        loading: false 
+      });
+
+      useCartStore.getState().fetchCart();
+
+    } catch (error) {
+      set({ loading: false, isAuthenticated: false, user: null, accessToken: null });
+      toast.error('Lỗi khi tải dữ liệu tài khoản Google!');
+      console.error(error);
+    }
+  },
   logout: async () => {
     try {
-      // BẮT BUỘC: Gọi API báo Backend xóa HttpOnly Cookie
       await userApi.logoutUser(); 
     } catch (error) {
       console.error("Lỗi khi xóa cookie phía server", error);
     } finally {
-      // Xóa data trên RAM
       set({ isAuthenticated: false, user: null, accessToken: null });
       useCartStore.getState().clearCartDB();
       toast.success('Đã đăng xuất!');
@@ -95,13 +116,9 @@ loginAction: async (data: LoginRequest) => {
 
   checkAuth: async () => {
     try {
-      // 1. Gọi API Refresh Token. 
-      // Trình duyệt sẽ tự động gửi kèm HttpOnly Cookie lên.
-      // Nếu Cookie hợp lệ, Backend trả về accessToken mới.
       const result = await userApi.refreshToken(); 
       set({ accessToken: result.accessToken });
 
-      // 2. Có token mới rồi thì lấy Profile
       const userProfile = await userApi.getProfile();
       set({ isAuthenticated: true, user: userProfile });
       

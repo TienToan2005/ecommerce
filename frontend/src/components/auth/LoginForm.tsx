@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
+import { GoogleLogin } from '@react-oauth/google';
 
 interface LoginFormProps {
   onSuccess?: () => void;
 }
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
-  const { loginAction, loading, error } = useAuthStore();
+  const { loginAction, setGoogleAuth, loading, error } = useAuthStore();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -19,7 +20,22 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       toast.success('Đăng nhập thành công!');
       if (onSuccess) onSuccess();
     } catch (err) {
-      // Lỗi đã được xử lý trong useAuthStore và ném ra đây để chặn luồng
+      // Lỗi đã được xử lý trong useAuthStore
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    try {
+      const tokenData = await GoogleLogin(credentialResponse.credential);
+      
+      await setGoogleAuth(tokenData.accessToken);
+      
+      toast.success('Đăng nhập Google thành công!');
+      
+      if (onSuccess) onSuccess();
+    } catch (err) {
+      toast.error('Lỗi khi xác thực với máy chủ!');
+      console.error(err);
     }
   };
 
@@ -46,6 +62,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
       <button type="submit" disabled={loading} className={`w-full bg-red-600 text-white font-bold py-3 rounded-lg hover:bg-red-700 transition-colors mt-4 shadow-lg shadow-red-600/30 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}>
         {loading ? 'ĐANG XỬ LÝ...' : 'ĐĂNG NHẬP'}
       </button>
+
+      <div className="relative mt-8 mb-4">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-300"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-4 bg-white text-gray-500 font-medium">Hoặc đăng nhập bằng</span>
+        </div>
+      </div>
+
+      <div className="flex justify-center">
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={() => toast.error('Đăng nhập Google thất bại!')}
+          shape="rectangular"
+          size="large"
+          theme="outline"
+          text="continue_with"
+        />
+      </div>
+      
     </form>
   );
 };

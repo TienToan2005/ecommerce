@@ -52,3 +52,6 @@ app:
   security:
     cookie:
       secure: ${COOKIE_SECURE:false}
+
+oauth2:
+  clientId: ${ClientID}

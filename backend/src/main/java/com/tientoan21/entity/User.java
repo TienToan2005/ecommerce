@@ -44,6 +44,8 @@ public class User extends BaseEntity{
 
     private LocalDate birthday;
 
+    private String avatar;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
 
@@ -55,6 +57,4 @@ public class User extends BaseEntity{
 
     @Builder.Default
     private boolean isEnabled = false;
-    private String verificationCode;
-    private LocalDateTime verificationCodeExpiresAt;
 }

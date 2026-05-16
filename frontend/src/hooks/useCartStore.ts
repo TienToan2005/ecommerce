@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import Decimal from "decimal.js";
 import * as cartApi from '../services/cart';
-import { useAuthStore } from './useAuthStore'; // 🚨 Kéo AuthStore vào để lấy userId
+import { useAuthStore } from './useAuthStore';
 import type { ProductResponse, ProductVariantResponse } from '../types/product';
 
 export interface CartItem {
@@ -16,7 +16,7 @@ interface CartState {
   fetchCart: () => Promise<void>;
   addToCart: (product: ProductResponse, variant: ProductVariantResponse, quantity?: number) => Promise<void>;
   removeFromCart: (variantId: number, cartItemId?: number) => Promise<void>; 
-  updateQuantity: (cartItemId: number, quantity: number) => Promise<void>; // Sửa lại nhận cartItemId
+  updateQuantity: (cartItemId: number, quantity: number) => Promise<void>;
   clearCartUI: () => void; 
   clearCartDB: () => Promise<void>;
   getTotalItems: () => number;

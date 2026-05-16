@@ -16,22 +16,22 @@ public class UnverifiedUserCleanupTask {
     private final UserRepository userRepository;
 
     /**
-     * Hàm này sẽ tự động chạy ngầm theo lịch sếp cài đặt.
-     * Ở đây tôi đang cài chạy mỗi ngày 1 lần vào đúng 02:00 sáng.
-     * (Cú pháp Cron: Giây Phút Giờ Ngày Tháng Thứ)
+     * Hàm này sẽ tự động chạy ngầm mỗi ngày 1 lần vào đúng 02:00 sáng.
      */
     @Scheduled(cron = "0 0 2 * * ?")
     public void cleanUpTrashAccounts() {
         log.info("🧹 Bắt đầu tiến trình dọn dẹp tài khoản chưa xác thực...");
 
-        LocalDateTime currentTime = LocalDateTime.now();
+        // Chọn mốc thời gian: Những tài khoản tạo cách đây hơn 24 giờ
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
 
-        int deletedCount = userRepository.deleteUnverifiedAndExpiredUsers(currentTime);
+        // Gọi hàm xóa và lấy số lượng bị chém
+        int deletedCount = userRepository.deleteByIsEnabledFalseAndCreatedAtBefore(cutoffTime);
 
         if (deletedCount > 0) {
-            log.info("✅ Đã chém bay {} tài khoản rác (Hết hạn OTP mà không kích hoạt).", deletedCount);
+            log.info("✅ Đã chém bay {} tài khoản rác (Đăng ký quá 24h mà không kích hoạt).", deletedCount);
         } else {
-            log.info("✨ Không có tài khoản rác nào cần dọn.");
+            log.info("✨ Database sạch bóng, không có tài khoản rác nào cần dọn.");
         }
     }
 }

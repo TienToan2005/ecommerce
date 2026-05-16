@@ -23,7 +23,7 @@ public enum ErrorCode {
     CART_ITEM_NOT_FOUND(1011,HttpStatus.NOT_FOUND,"Cart item not found"),
     REVIEW_NOT_FOUND(1012,HttpStatus.NOT_FOUND,"Review not found"),
     VARIANT_NOT_FOUND(1013,HttpStatus.NOT_FOUND,"Variant not found"),
-    INVALID_OTP(1014,HttpStatus.BAD_REQUEST,"INVALID_OTP"),
+    INVALID_OTP(1014,HttpStatus.BAD_REQUEST,"Mã OTP không chính xác"),
     USER_ALREADY_VERIFIED(1015,HttpStatus.BAD_REQUEST, "USER_ALREADY_VERIFIED"),
     OTP_EXPIRED(1016,HttpStatus.BAD_REQUEST,"OTP_EXPIRED"),
     CANNOT_BLOCK_ADMIN(1017,HttpStatus.BAD_REQUEST, "CANNOT_BLOCK_ADMIN"),

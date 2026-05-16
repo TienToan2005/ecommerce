@@ -73,26 +73,24 @@ public class EmailService {
             log.error("Lỗi khi gửi email cho đơn hàng: " + order.getId(), e);
         }
     }
-    public void sendOtpEmail(User user) {
+    public void sendOtpEmail(User user, String otp) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             String htmlContent = """
             <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; border: 1px solid #ddd; border-radius: 10px; text-align: center;">
-                <h2>Mã xác thực tài khoản TPHONE</h2>
                 <h2>Chào %s,</h2>
                 <p>Mã OTP xác thực của bạn là:</p>
                 <div style="font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 5px; padding: 15px; border: 2px dashed #007bff; display: inline-block; margin-bottom: 20px;">
                     %s
                 </div>
                 <p style="color: red; font-size: 12px;"><i>Mã này sẽ hết hạn sau 15 phút.</i></p>
-                <p>Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
             </div>
-            """.formatted(user.getFullName(), user.getVerificationCode());
+            """.formatted(user.getFullName(), otp);
 
             helper.setTo(user.getEmail());
-            helper.setSubject("Mã OTP xác thực đăng ký - TPHONE");
+            helper.setSubject("Mã OTP xác thực - TPHONE");
             helper.setText(htmlContent, true);
 
             mailSender.send(message);
@@ -100,20 +98,21 @@ public class EmailService {
             log.error("Lỗi gửi email xác thực OTP", e);
         }
     }
-    public void sendVerificationEmail(User user) {
+    public void sendVerificationEmail(User user, String otp) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            String verifyLink = "http://localhost:8080/api/auth/verify?code=" + user.getVerificationCode();
-
             String htmlContent = """
-            <div style="font-family: Arial; padding: 20px;">
+            <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; border: 1px solid #ddd; border-radius: 10px; text-align: center;">
                 <h2>Chào %s,</h2>
-                <p>Vui lòng click vào link dưới đây để kích hoạt tài khoản:</p>
-                <a href="%s" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none;">Kích hoạt tài khoản</a>
+                <p>Mã OTP để kích hoạt tài khoản của bạn là:</p>
+                <div style="font-size: 24px; font-weight: bold; color: #28a745; letter-spacing: 5px; padding: 15px; border: 2px dashed #28a745; display: inline-block; margin-bottom: 20px;">
+                    %s
+                </div>
+                <p style="color: red; font-size: 12px;"><i>Mã này sẽ hết hạn sau 15 phút.</i></p>
             </div>
-            """.formatted(user.getFullName(), verifyLink);
+            """.formatted(user.getFullName(), otp);
 
             helper.setTo(user.getEmail());
             helper.setSubject("Kích hoạt tài khoản TPHONE");
@@ -125,26 +124,24 @@ public class EmailService {
         }
     }
 
-    public void sendForgotPasswordEmail(User user) {
+    public void sendForgotPasswordEmail(User user, String otp) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
             String htmlContent = """
             <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; border: 1px solid #ddd; border-radius: 10px; text-align: center;">
-                <h2>Mã xác thực tài khoản TPHONE</h2>
                 <h2>Chào %s,</h2>
-                <p>Mã OTP xác thực của bạn là:</p>
-                <div style="font-size: 24px; font-weight: bold; color: #007bff; letter-spacing: 5px; padding: 15px; border: 2px dashed #007bff; display: inline-block; margin-bottom: 20px;">
+                <p>Mã OTP để đặt lại mật khẩu của bạn là:</p>
+                <div style="font-size: 24px; font-weight: bold; color: #d9534f; letter-spacing: 5px; padding: 15px; border: 2px dashed #d9534f; display: inline-block; margin-bottom: 20px;">
                     %s
                 </div>
                 <p style="color: red; font-size: 12px;"><i>Mã này sẽ hết hạn sau 15 phút.</i></p>
-                <p>Vui lòng không chia sẻ mã này cho bất kỳ ai.</p>
             </div>
-            """.formatted(user.getFullName(),user.getVerificationCode());
+            """.formatted(user.getFullName(), otp);
 
             helper.setTo(user.getEmail());
-            helper.setSubject("Mã OTP xác thực quên mật khẩu - TPHONE");
+            helper.setSubject("Mã OTP Khôi phục mật khẩu - TPHONE");
             helper.setText(htmlContent, true);
 
             mailSender.send(message);

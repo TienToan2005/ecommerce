@@ -12,7 +12,8 @@ import {
   ClipboardList, 
   UserCircle,
   Settings,
-  Loader2
+  Loader2,
+  ShoppingBag
 } from 'lucide-react';
 
 import { useAuthStore } from '../hooks/useAuthStore';
@@ -203,7 +204,7 @@ const Header: React.FC = () => {
                 ) : (
                   <div className="p-6 text-center">
                     <p className="text-sm text-gray-500 mb-2">Không tìm thấy sản phẩm nào phù hợp với "{searchTerm}"</p>
-                    <img src="https://cellphones.com.vn/cart/_nuxt/img/empty-cart.c71473e.png" alt="Empty" className="w-20 mx-auto opacity-50 grayscale" />
+                    <ShoppingBag size={80} className="mx-auto text-gray-300 mb-4" />
                   </div>
                 )}
               </div>

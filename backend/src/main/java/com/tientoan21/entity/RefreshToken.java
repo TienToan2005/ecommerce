@@ -1,12 +1,15 @@
 package com.tientoan21.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 
 @Entity
-@Data
+@Getter
+@Setter
 @Table(name = "refresh_tokens")
 public class RefreshToken {
     @Id
@@ -15,12 +18,17 @@ public class RefreshToken {
 
     private String token;
 
-    private Instant expiryDate;;
+    private Instant expiryDate;
 
     private boolean revoked;
-    @ManyToOne
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
     private RefreshToken parent;
 }

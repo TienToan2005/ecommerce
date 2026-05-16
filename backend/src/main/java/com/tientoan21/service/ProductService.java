@@ -31,7 +31,6 @@ public class ProductService {
         return productMapper.toProductResponse(product);
     }
     @Transactional(readOnly = true)
-    @Cacheable(value = "products", key = "#request.hashCode() + '-' + #pageable.pageNumber")
     public Page<ProductResponse> filterProducts(FilterProductsRequest request,Pageable pageable){
         Specification<Product> spec = Specification.where(ProductSpecification.hasName(request.name()))
                 .and(ProductSpecification.hasCategory(request.categoryId()))

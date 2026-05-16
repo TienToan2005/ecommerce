@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../../hooks/useCartStore';
-import { formatCurrency } from '../../utils/format'; // Import hàm format tiền của sếp
+import { formatCurrency } from '../../utils/format';
 import { Trash2, Minus, Plus, ShoppingBag } from 'lucide-react';
 
 const CartPage: React.FC = () => {
@@ -13,7 +13,7 @@ const CartPage: React.FC = () => {
         <div className="w-40 h-40 bg-gray-100 rounded-full flex items-center justify-center mb-6">
           <ShoppingBag size={64} className="text-gray-400" />
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Giỏ hàng của sếp đang trống</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Giỏ hàng của bạn đang trống</h2>
         <p className="text-gray-500 mb-6">Hãy chọn thêm một vài món đồ công nghệ xịn sò nhé!</p>
         <Link to="/" className="bg-red-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-red-700 transition-colors">
           Tiếp tục mua sắm
@@ -71,7 +71,7 @@ const CartPage: React.FC = () => {
                       <span className="w-10 text-center text-sm font-semibold">{item.quantity}</span>
                       <button 
                         onClick={() => updateQuantity(item.variant.id, item.quantity + 1)}
-                        disabled={item.quantity >= item.variant.stock} // Chặn nếu vượt quá số lượng tồn kho
+                        disabled={item.quantity >= item.variant.stock}
                         className={`p-1.5 transition-colors rounded-r-lg ${item.quantity >= item.variant.stock ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-gray-200 text-gray-600'}`}
                       ><Plus size={16} /></button>
                     </div>

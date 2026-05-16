@@ -23,12 +23,9 @@ public interface UserRepository extends JpaRepository<User,Long>, JpaSpecificati
 
     boolean existsByPhoneNumber(String phoneNumber);
 
-    Optional<User> findByEmailAndVerificationCode(String email, String otp);
-
     Optional<User> findByEmail(String email);
-
     @Modifying
     @Transactional
-    @Query("DELETE FROM User u WHERE u.isEnabled = false AND u.verificationCodeExpiresAt < :now")
-    int deleteUnverifiedAndExpiredUsers(@Param("now") LocalDateTime now);
+    @Query("DELETE FROM User u WHERE u.isEnabled = false AND u.createdAt < :cutoffTime")
+    int deleteByIsEnabledFalseAndCreatedAtBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

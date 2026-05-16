@@ -1,6 +1,11 @@
 package com.tientoan21.service;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
 import com.tientoan21.config.JwtUtils;
+import com.tientoan21.dto.request.GoogleLoginRequest;
 import com.tientoan21.dto.request.LoginRequest;
 import com.tientoan21.dto.request.RegisterRequest;
 import com.tientoan21.dto.request.ResetPasswordRequest;
@@ -13,10 +18,12 @@ import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.enums.UserRole;
 import com.tientoan21.exception.AppException;
 import com.tientoan21.repository.RefreshTokenRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.tientoan21.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,9 +31,10 @@ import org.springframework.stereotype.Service;
 import com.tientoan21.repository.UserRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Random;
-
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -39,8 +47,20 @@ public class AuthService {
     private final EmailService emailService;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+    private GoogleIdTokenVerifier verifier;
+
     @Value("${app.security.cookie.secure}")
     private boolean isCookieSecure;
+    @Value("${oauth2.clientId}")
+    private String clientID;
+
+    @PostConstruct
+    public void init() {
+        this.verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
+                .setAudience(Collections.singletonList(clientID))
+                .build();
+    }
 
     private ResponseCookie buildRefreshTokenCookie(String token, long maxAgeInSeconds) {
         return ResponseCookie.from("refreshToken", token)
@@ -63,7 +83,6 @@ public class AuthService {
         var accessToken = jwtUtils.generateAccessToken(user);
         var refreshToken = refreshTokenService.createRefreshToken(user);
 
-        // Sử dụng hàm helper, sống 7 ngày
         ResponseCookie cookie = buildRefreshTokenCookie(refreshToken.getToken(), 7 * 24 * 60 * 60);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -74,7 +93,51 @@ public class AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+    @Transactional
+    public TokenResponse googleLogin(GoogleLoginRequest request, HttpServletResponse response) {
+        try {
+            GoogleIdToken idToken = verifier.verify(request.credential());
+            if (idToken == null) {
+                throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Token Google không hợp lệ!");
+            }
 
+            // 2. Móc thông tin từ Google ra
+            GoogleIdToken.Payload payload = idToken.getPayload();
+            String email = payload.getEmail();
+            String name = (String) payload.get("name");
+            String pictureUrl = (String) payload.get("picture"); // Móc luôn Avatar của Google
+
+            User user = userRepository.findByEmail(email).orElse(null);
+
+            if (user == null) {
+                user = User.builder()
+                        .fullName(name)
+                        .email(email)
+                        .avatar(pictureUrl)
+                        .role(UserRole.USER)
+                        .isEnabled(true)
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .build();
+                user = userRepository.save(user);
+            }
+
+            var accessToken = jwtUtils.generateAccessToken(user);
+            var refreshToken = refreshTokenService.createRefreshToken(user);
+
+            ResponseCookie cookie = buildRefreshTokenCookie(refreshToken.getToken(), 7 * 24 * 60 * 60);
+            response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+            return TokenResponse.builder()
+                    .accessToken(accessToken)
+                    .authenticated(true)
+                    .username(user.getEmail())
+                    .role(user.getRole().name())
+                    .build();
+
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Lỗi xác thực Google: " + e.getMessage());
+        }
+    }
     @Transactional(rollbackFor = Exception.class)
     public UserResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -93,26 +156,24 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.password()))
                 .birthday(request.birthday())
                 .isEnabled(false)
-                .verificationCode(otp)
-                .verificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15))
                 .build();
 
         User savedUser = userRepository.save(user);
-        emailService.sendVerificationEmail(savedUser);
+
+        String redisKey = "OTP:REGISTER:" + request.email();
+        redisTemplate.opsForValue().set(redisKey, otp, 15, TimeUnit.MINUTES);
+
+        emailService.sendVerificationEmail(savedUser, otp);
 
         return userMapper.toUserResponse(savedUser);
     }
 
     @Transactional
     public RefreshTokenResponse refreshToken(String token, HttpServletResponse response) {
-        // Kiểm tra token cũ
         RefreshToken oldToken = refreshTokenService.verifyToken(token);
-
-        // Cấp phát token mới (Rotate)
         RefreshToken newRefreshToken = refreshTokenService.rotateToken(oldToken);
         String newAccessToken = jwtUtils.generateAccessToken(newRefreshToken.getUser());
 
-        // CHUẨN HOÁ: Ghi đè Cookie cũ bằng Refresh Token mới
         ResponseCookie cookie = buildRefreshTokenCookie(newRefreshToken.getToken(), 7 * 24 * 60 * 60);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
@@ -126,29 +187,31 @@ public class AuthService {
         if (token != null) {
             refreshTokenRepository.deleteByToken(token);
         }
-
         ResponseCookie deleteCookie = buildRefreshTokenCookie("", 0);
         response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
     }
 
     @Transactional
-    public void verifyAccount(String email,String otp) {
-        User user = userRepository.findByEmailAndVerificationCode(email,otp)
-                .orElseThrow(() -> new AppException(ErrorCode.INVALID_OTP));
+    public void verifyAccount(String email, String otp) {
+        String redisKey = "OTP:REGISTER:" + email;
+        String savedOtp = (String) redisTemplate.opsForValue().get(redisKey);
 
+        if (savedOtp == null) {
+            throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+        if (!savedOtp.equals(otp)) {
+            throw new AppException(ErrorCode.INVALID_OTP);
+        }
+
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         if (user.isEnabled()) {
             throw new AppException(ErrorCode.USER_ALREADY_VERIFIED);
         }
 
-        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new AppException(ErrorCode.OTP_EXPIRED);
-        }
-
         user.setEnabled(true);
-        user.setVerificationCode(null);
-        user.setVerificationCodeExpiresAt(null);
-
         userRepository.save(user);
+
+        redisTemplate.delete(redisKey);
     }
 
     @Transactional
@@ -159,10 +222,12 @@ public class AuthService {
         if (user.isEnabled()) {
             throw new AppException(ErrorCode.USER_ALREADY_VERIFIED);
         }
+
         String otp = generateOTP();
-        user.setVerificationCode(otp);
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-        emailService.sendOtpEmail(user);
+        String redisKey = "OTP:REGISTER:" + email;
+        redisTemplate.opsForValue().set(redisKey, otp, 15, TimeUnit.MINUTES);
+
+        emailService.sendOtpEmail(user, otp);
     }
 
     @Transactional
@@ -171,27 +236,33 @@ public class AuthService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         String resetCode = generateOTP();
-        user.setVerificationCode(resetCode);
-        user.setVerificationCodeExpiresAt(LocalDateTime.now().plusMinutes(15));
-        emailService.sendForgotPasswordEmail(user);
+        String redisKey = "OTP:FORGOT:" + email;
+        redisTemplate.opsForValue().set(redisKey, resetCode, 15, TimeUnit.MINUTES);
+
+        emailService.sendForgotPasswordEmail(user, resetCode);
     }
+
     @Transactional
     public void resetPassword(ResetPasswordRequest request){
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if(user.getVerificationCode() == null || !user.getVerificationCode().equals(request.otp())){
-            throw new AppException(ErrorCode.INVALID_OTP);
-        }
-        if (user.getVerificationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+        String redisKey = "OTP:FORGOT:" + request.email();
+        String savedOtp = (String) redisTemplate.opsForValue().get(redisKey);
+
+        if (savedOtp == null) {
             throw new AppException(ErrorCode.OTP_EXPIRED);
+        }
+        if (!savedOtp.equals(request.otp())) {
+            throw new AppException(ErrorCode.INVALID_OTP);
         }
 
         user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setVerificationCode(null);
-        user.setVerificationCodeExpiresAt(null);
+        userRepository.save(user);
 
+        redisTemplate.delete(redisKey);
     }
+
     private String generateOTP() {
         Random random = new Random();
         int otp = 100000 + random.nextInt(900000);

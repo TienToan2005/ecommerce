@@ -20,4 +20,5 @@ public class UserResponse {
     private UserRole role;
     private UserStatus status;
     private LocalDate birthday;
+    private String avatar;
 }
