@@ -6,6 +6,7 @@ import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.entity.Order;
 import com.tientoan21.service.OrderService;
 import com.tientoan21.service.PaymentService;
+import com.tientoan21.service.SepayWebhookService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class PaymentController {
     private final PaymentService paymentService;
     private final OrderService orderService;
     private final SepaySignatureVerifier verifier;
+    private final SepayWebhookService sepayWebhookService;
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @PostMapping("/create-payment")
@@ -57,7 +59,7 @@ public class PaymentController {
         } catch (tools.jackson.core.JacksonException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false));
         }
-
+        sepayWebhookService.handle(payload);
         log.info("SePay webhook: id={}, type={}, amount={}",
                 payload.id(), payload.transferType(), payload.transferAmount());
 
