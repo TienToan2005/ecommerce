@@ -17,4 +17,5 @@ public class PaymentResponse {
     private BigDecimal amount;
     private PaymentStatus status;
     private String paymentUrl;
+    private String paymentCode;
 }

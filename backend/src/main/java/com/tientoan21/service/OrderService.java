@@ -90,6 +90,10 @@ public class OrderService {
         order.setGrandTotal(grandTotal);
 
         PaymentMethod method = parsePaymentMethod(request.paymentMethod());
+        if (method == PaymentMethod.SEPAY) {
+            order.setPaymentCode("TC" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase());
+        }
+
         Payment payment = Payment.builder()
                 .order(order)
                 .amount(grandTotal)
@@ -109,6 +113,8 @@ public class OrderService {
         if (method == PaymentMethod.VNPAY) {
             String paymentUrl = paymentService.createVnPayPaymentUrl(savedOrder, httpServletRequest);
             response.getPaymentInfo().setPaymentUrl(paymentUrl);
+        } else if (method == PaymentMethod.SEPAY) {
+            response.getPaymentInfo().setPaymentCode(savedOrder.getPaymentCode());
         }
 
         String message = "TING_TING: Đơn hàng mới " + order.getOrderNumber() + " vừa thanh toán thành công!";
@@ -176,6 +182,9 @@ public class OrderService {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
+        if(order.getStatus() != OrderStatus.PENDING){
+            return;
+        }
         if (order.getPayment() != null) {
             order.getPayment().setStatus(newStatus);
         }
@@ -188,7 +197,7 @@ public class OrderService {
                 log.error("Lỗi gửi email xác nhận, nhưng thanh toán VNPAY đã thành công! Chi tiết lỗi: {}", e.getMessage());
             }
 
-        } else if (newStatus == PaymentStatus.FAILED) {
+        } else if (newStatus == PaymentStatus.FAILED && order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELLED);
 
             for (OrderItem item : order.getOrderItemList()) {

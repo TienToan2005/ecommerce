@@ -46,5 +46,8 @@ public class Order extends BaseEntity{
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private Payment payment;
+
+    @Column(name = "payment_code", unique = true, length = 20)
+    private String paymentCode;
 }
 
