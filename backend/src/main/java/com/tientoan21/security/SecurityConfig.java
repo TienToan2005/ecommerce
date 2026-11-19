@@ -33,6 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/payment/payment-return").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/payment/sepay-webhook").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**", "/api/reviews/**").permitAll()
                         .requestMatchers(
                                 "/api/categories", "/api/categories/**",

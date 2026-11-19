@@ -42,7 +42,8 @@ vnpay:
   hash-secret: ${HASH_SECRET}
   pay-url: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"
   return-url: "http://localhost:5173/payment-return"
-
+sepay:
+  webhook-secret: ${SEPAY_WEBHOOK_SECRET}
 cloudinary:
   cloud-name: ${CLOUDINARY_NAME}
   api-key: ${CLOUDINARY_KEY}
