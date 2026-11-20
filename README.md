@@ -136,6 +136,11 @@ frontend/
 | **Build Tool** | Maven | - |
 | **Logging** | SLF4J (default) | - |
 
+### Nâng cấp CSDL cũ (thanh toán SePay)
+Flyway đang tắt (`spring.flyway.enabled: false`). Nếu CSDL đã có cột `payments.method` / `payments.status` dạng số,
+chạy một lần `backend/src/main/resources/db/migration/manual_payments_enum_to_string.sql` để chuyển sang chuỗi
+(`EnumType.STRING`), nếu không Hibernate báo lỗi DDL và không đọc được dữ liệu cũ.
+
 ### Frontend Stack
 | Thành phần | Công nghệ | Phiên bản |
 |-----------|-----------|----------|
