@@ -15,6 +15,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@lombok.extern.slf4j.Slf4j
 public class PaymentService {
 
     private final VNPayConfig vnPayConfig;
@@ -107,11 +108,12 @@ public class PaymentService {
             String responseCode = fields.get("vnp_ResponseCode");
 
             if ("00".equals(responseCode)) {
-                orderService.updatePaymentStatus(orderCode, PaymentStatus.COMPLETED);
-                voucherService.subtractionVoucher(orderCode);
+                boolean changed = orderService.updatePaymentStatus(orderCode, PaymentStatus.COMPLETED);
+                if (changed) voucherService.subtractionVoucher(orderCode);
                 return ApiResponse.builder().data("Thanh toán thành công").build();
             } else {
-                orderService.updatePaymentStatus(orderCode, PaymentStatus.FAILED);
+                boolean changed = orderService.updatePaymentStatus(orderCode, PaymentStatus.FAILED);
+                if (!changed) log.info("Bỏ qua kết quả thất bại của VNPay: đơn {} không còn ở trạng thái PENDING", orderCode);
                 return ApiResponse.builder().data("Thanh toán thất bại").build();
             }
         } else {

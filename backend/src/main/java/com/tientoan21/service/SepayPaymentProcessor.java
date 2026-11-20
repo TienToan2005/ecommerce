@@ -10,6 +10,7 @@ import com.tientoan21.repository.OrderRepository;
 import com.tientoan21.repository.PaymentTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class SepayPaymentProcessor {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final VoucherService voucherService;
+    private final SimpMessagingTemplate messagingTemplate;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern CODE_PATTERN = Pattern.compile("TC[A-Z0-9]{8}", Pattern.CASE_INSENSITIVE);
 
@@ -42,22 +44,37 @@ public class SepayPaymentProcessor {
         }
         String code = extractCode(request);
         if (code == null){
-            return save(request,null,null,SepayResult.ORDER_NOT_FOUND, "no code");
+            return unapplied(request, null, null, SepayResult.ORDER_NOT_FOUND, "Không tìm thấy mã thanh toán trong nội dung chuyển khoản");
         }
 
         Optional<Order> found = orderRepository.findByPaymentCode(code);
         if (found.isEmpty()){
-            return save(request,null,code,SepayResult.ORDER_NOT_FOUND,"...");
+            return unapplied(request, null, code, SepayResult.ORDER_NOT_FOUND, "Không có đơn nào ứng với mã " + code);
         }
         Order order = found.get();
         if(order.getStatus() != OrderStatus.PENDING){
-            return save(request,order,code,SepayResult.ORDER_NOT_PENDING,"...");
+            return unapplied(request, order, code, SepayResult.ORDER_NOT_PENDING,
+                    "Đơn " + order.getOrderNumber() + " đang ở trạng thái " + order.getStatus() + ", không nhận thanh toán");
         }
-        int cmp = BigDecimal.valueOf(request.transferAmount()).compareTo(order.getGrandTotal());
-        if (cmp < 0)  return save(request, order, code, SepayResult.UNDERPAID, "insufficient transaction");
-        orderService.updatePaymentStatus(order.getOrderNumber(), PaymentStatus.COMPLETED);
-        voucherService.subtractionVoucher(order.getOrderNumber());
+        long received = transactionRepository.sumReceived(order) + request.transferAmount();
+        int cmp = BigDecimal.valueOf(received).compareTo(order.getGrandTotal());
+        if (cmp < 0)  return save(request, order, code, SepayResult.UNDERPAID, "Received " + received + " but " + order.getGrandTotal() +" is required. Please transfer an additional " + order.getGrandTotal().subtract(BigDecimal.valueOf(received)));
+
+        boolean changed = orderService.updatePaymentStatus(order.getOrderNumber(), PaymentStatus.COMPLETED);
+        if (changed)  voucherService.subtractionVoucher(order.getOrderNumber());
         return save(request, order, code, cmp == 0 ? SepayResult.PAID : SepayResult.PAID_OVERPAID, cmp == 0 ? "success" : "excess transaction");
+    }
+
+    /** Lưu giao dịch tiền đã về nhưng không áp được vào đơn nào, và báo cho admin xử lý (hoàn tiền/đối soát). */
+    private SepayResult unapplied(SepayWebhookRequest request, Order order, String code, SepayResult result, String note) {
+        SepayResult saved = save(request, order, code, result, note);
+        try {
+            messagingTemplate.convertAndSend("/topic/admin-notifications",
+                    "SEPAY: có khoản " + request.transferAmount() + "đ chưa áp dụng (giao dịch " + request.id() + "): " + note);
+        } catch (Exception e) {
+            log.warn("Không gửi được thông báo admin cho giao dịch {}: {}", request.id(), e.getMessage());
+        }
+        return saved;
     }
 
     private SepayResult save(SepayWebhookRequest request, Order order, String code, SepayResult result, String note) {

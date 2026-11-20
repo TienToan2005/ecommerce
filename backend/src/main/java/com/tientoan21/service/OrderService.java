@@ -11,6 +11,7 @@ import com.tientoan21.repository.ProductVariantRepository;
 import com.tientoan21.repository.VoucherRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +50,7 @@ public class OrderService {
     private final VoucherService voucherService;
     private final SimpMessagingTemplate messagingTemplate;
     private final SepayQrService sepayQrService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Lazy
     @Autowired
@@ -195,12 +197,12 @@ public class OrderService {
     }
 
     @Transactional
-    public void updatePaymentStatus(String orderNumber, PaymentStatus newStatus) {
+    public boolean updatePaymentStatus(String orderNumber, PaymentStatus newStatus) {
         Order order = orderRepository.findByOrderNumber(orderNumber)
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         if(order.getStatus() != OrderStatus.PENDING){
-            return;
+            return false;
         }
         if (order.getPayment() != null) {
             order.getPayment().setStatus(newStatus);
@@ -208,11 +210,7 @@ public class OrderService {
 
         if (newStatus == PaymentStatus.COMPLETED) {
             order.setStatus(OrderStatus.CONFIRMED);
-            try {
-                emailService.sendOrderConfirmationEmail(order);
-            } catch (Exception e) {
-                log.error("Lỗi gửi email xác nhận, nhưng thanh toán VNPAY đã thành công! Chi tiết lỗi: {}", e.getMessage());
-            }
+            eventPublisher.publishEvent(new OrderConfirmedEvent(order.getOrderNumber()));
 
         } else if (newStatus == PaymentStatus.FAILED && order.getStatus() == OrderStatus.PENDING) {
             order.setStatus(OrderStatus.CANCELLED);
@@ -224,6 +222,8 @@ public class OrderService {
         }
 
         orderRepository.save(order);
+
+        return true;
     }
 
     @Transactional
