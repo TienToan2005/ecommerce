@@ -18,4 +18,5 @@ public class PaymentResponse {
     private PaymentStatus status;
     private String paymentUrl;
     private String paymentCode;
+    private String qrUrl;
 }

@@ -21,6 +21,7 @@ import ProfilePage from './pages/profile/ProfilePage';
 import OrderHistory from './pages/order/OrderHistory';
 import OrderDetail from './pages/order/OrderDetail';
 import Checkout from './pages/order/Checkout';
+import SepayPayment from './pages/order/SepayPayment';
 import ForgotPassword from './pages/auth/ForgotPassword';
 
 import Dashboard from './pages/admin/Dashboard';
@@ -78,6 +79,7 @@ const App: React.FC = () => {
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment/sepay/:id" element={<SepayPayment />} />
             <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/order-history/:id" element={<OrderDetail />} />
           </Route>

@@ -89,6 +89,7 @@ const AdminOrder: React.FC = () => {
           >
             <option value="">Tất cả trạng thái</option>
             <option value="PENDING">Chờ xác nhận</option>
+            <option value="CONFIRMED">Đã xác nhận</option>
             <option value="PROCESSING">Chuẩn bị hàng</option>
             <option value="SHIPPED">Đang giao</option>
             <option value="DELIVERED">Đã giao</option>
@@ -159,6 +160,7 @@ const AdminOrder: React.FC = () => {
                           className="w-full text-xs font-bold text-gray-600 outline-none cursor-pointer bg-white mb-2 hover:border-red-300 transition border border-gray-200 rounded p-1.5 shadow-sm focus:ring-1 focus:ring-red-500"
                         >
                           <option value="PENDING">Chờ xác nhận</option>
+                          <option value="CONFIRMED">Đã xác nhận</option>
                           <option value="PROCESSING">Chuẩn bị hàng</option>
                           <option value="SHIPPED">Đang giao</option>
                           <option value="DELIVERED">Đã giao</option>

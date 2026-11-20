@@ -10,7 +10,7 @@ import type { AddressResponse } from '../../types/address';
 import { formatCurrency } from '../../utils/format';
 import toast from 'react-hot-toast';
 import type { CartItemResponse } from '../../types/cart';
-import { MapPin, Plus, X, CreditCard, Banknote, CheckCircle2, Ticket, ChevronRight } from 'lucide-react';
+import { MapPin, Plus, X, CreditCard, Banknote, CheckCircle2, Ticket, ChevronRight, QrCode } from 'lucide-react';
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ const Checkout: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
   const { items: cartItems, clearCartUI } = useCartStore();
 
-  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPAY'>('COD');
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPAY' | 'SEPAY'>('COD');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- STATE CHO ĐỊA CHỈ ---
@@ -193,6 +193,8 @@ const Checkout: React.FC = () => {
       const paymentUrl = response.paymentInfo?.paymentUrl;
       if (paymentMethod === 'VNPAY' && paymentUrl) {
         window.location.href = paymentUrl;
+      } else if (paymentMethod === 'SEPAY') {
+        navigate(`/payment/sepay/${response.id}`, { replace: true });
       } else {
         toast.success('🎉 Đặt hàng thành công!');
         navigate('/order-history');
@@ -254,7 +256,7 @@ const Checkout: React.FC = () => {
             {/* KHỐI THANH TOÁN */}
             <div className="bg-white p-6 rounded-xl shadow-sm">
               <h2 className="text-lg font-bold mb-4">Phương Thức Thanh Toán</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div onClick={() => setPaymentMethod('COD')} className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all select-none ${paymentMethod === 'COD' ? 'border-red-500 bg-red-50/50' : 'border-gray-200 hover:border-red-200'}`}>
                   <div className="mr-3 text-emerald-600 bg-emerald-100 p-2 rounded-full"><Banknote size={24} /></div>
                   <div className="flex-1"><span className="font-bold text-gray-800 block">Thanh toán khi nhận hàng</span><span className="text-xs text-gray-500">Phí thu hộ: 0đ</span></div>
@@ -264,6 +266,11 @@ const Checkout: React.FC = () => {
                   <div className="mr-3 text-blue-600 bg-blue-100 p-2 rounded-full"><CreditCard size={24} /></div>
                   <div className="flex-1"><span className="font-bold text-gray-800 block">Thanh toán VNPAY</span><span className="text-xs text-gray-500">Quét mã QR / Thẻ ATM</span></div>
                   {paymentMethod === 'VNPAY' ? <CheckCircle2 className="text-red-600" size={20}/> : <div className="w-5 h-5 rounded-full border-2 border-gray-200"></div>}
+                </div>
+                <div onClick={() => setPaymentMethod('SEPAY')} className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all select-none ${paymentMethod === 'SEPAY' ? 'border-red-500 bg-red-50/50' : 'border-gray-200 hover:border-red-200'}`}>
+                  <div className="mr-3 text-violet-600 bg-violet-100 p-2 rounded-full"><QrCode size={24} /></div>
+                  <div className="flex-1"><span className="font-bold text-gray-800 block">Chuyển khoản QR (SePay)</span><span className="text-xs text-gray-500">Quét mã bằng app ngân hàng</span></div>
+                  {paymentMethod === 'SEPAY' ? <CheckCircle2 className="text-red-600" size={20}/> : <div className="w-5 h-5 rounded-full border-2 border-gray-200"></div>}
                 </div>
               </div>
             </div>

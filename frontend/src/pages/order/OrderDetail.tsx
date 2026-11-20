@@ -94,7 +94,11 @@ const OrderDetail: React.FC = () => {
                 <h3 className="font-bold">Phương thức thanh toán</h3>
               </div>
               <div className="space-y-2 text-sm text-gray-600">
-                <p>Hình thức: <span className="font-bold text-gray-800">{order.paymentInfo?.method === 'VNPAY' ? 'Thanh toán qua VNPAY' : 'Thanh toán khi nhận hàng (COD)'}</span></p>
+                <p>Hình thức: <span className="font-bold text-gray-800">{order.paymentInfo?.method === 'VNPAY'
+                  ? 'Thanh toán qua VNPAY'
+                  : order.paymentInfo?.method === 'SEPAY'
+                    ? 'Chuyển khoản QR (SePay)'
+                    : 'Thanh toán khi nhận hàng (COD)'}</span></p>
                 <p className="flex items-center gap-2">
                   Trạng thái: 
                   {order.paymentInfo?.status === 'COMPLETED' ? (

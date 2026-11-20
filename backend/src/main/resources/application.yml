@@ -44,6 +44,10 @@ vnpay:
   return-url: "http://localhost:5173/payment-return"
 sepay:
   webhook-secret: ${SEPAY_WEBHOOK_SECRET}
+  qr:
+    account: ${SEPAY_QR_ACCOUNT:}
+    bank: ${SEPAY_QR_BANK:}
+    base-url: ${SEPAY_QR_BASE_URL:https://qr.sepay.vn/img}
 cloudinary:
   cloud-name: ${CLOUDINARY_NAME}
   api-key: ${CLOUDINARY_KEY}

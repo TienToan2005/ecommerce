@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.tientoan21.dto.request.OrderItemRequest;
 import com.tientoan21.dto.request.OrderRequest;
 import com.tientoan21.dto.response.OrderResponse;
+import com.tientoan21.dto.response.PaymentResponse;
 import com.tientoan21.enums.ErrorCode;
 import com.tientoan21.enums.OrderStatus;
 import com.tientoan21.enums.PaymentMethod;
@@ -46,6 +47,7 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final VoucherService voucherService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SepayQrService sepayQrService;
 
     @Lazy
     @Autowired
@@ -114,7 +116,7 @@ public class OrderService {
             String paymentUrl = paymentService.createVnPayPaymentUrl(savedOrder, httpServletRequest);
             response.getPaymentInfo().setPaymentUrl(paymentUrl);
         } else if (method == PaymentMethod.SEPAY) {
-            response.getPaymentInfo().setPaymentCode(savedOrder.getPaymentCode());
+            addSepayInfo(savedOrder, response);
         }
 
         String message = "TING_TING: Đơn hàng mới " + order.getOrderNumber() + " vừa thanh toán thành công!";
@@ -174,7 +176,21 @@ public class OrderService {
             throw new IllegalArgumentException("You do not have permission to view this order");
         }
 
-        return orderMapper.toOrderResponse(order);
+        OrderResponse response = orderMapper.toOrderResponse(order);
+        if (order.getPayment() != null && order.getPayment().getMethod() == PaymentMethod.SEPAY) {
+            addSepayInfo(order, response);
+        }
+        return response;
+    }
+
+    /** Gắn mã thanh toán và URL mã QR vào phản hồi của đơn thanh toán bằng SePay. */
+    private void addSepayInfo(Order order, OrderResponse response) {
+        PaymentResponse paymentInfo = response.getPaymentInfo();
+        if (paymentInfo == null) {
+            return;
+        }
+        paymentInfo.setPaymentCode(order.getPaymentCode());
+        paymentInfo.setQrUrl(sepayQrService.buildQrUrl(order.getPaymentCode(), order.getGrandTotal()));
     }
 
     @Transactional
