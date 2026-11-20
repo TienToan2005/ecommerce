@@ -64,8 +64,8 @@ public class VoucherService {
         BigDecimal discountAmount = BigDecimal.ZERO;
 
         if(voucher.getDiscountType() == DiscountType.PERCENT){
-            BigDecimal percent = voucher.getDiscountValue().divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
-            discountAmount = orderTotal.multiply(percent);
+            discountAmount = orderTotal.multiply(voucher.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
 
             if(voucher.getMaxDiscount() != null && discountAmount.compareTo(voucher.getMaxDiscount()) > 0){
                 discountAmount = voucher.getMaxDiscount();

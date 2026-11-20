@@ -53,13 +53,13 @@ public class PaymentController {
             return ResponseEntity.status(401).body(Map.of("success", false));
         }
 
-        SepayWebhookRequest payload = null;
-        if (payload.id() == null || payload.transferAmount() == null) {
-            return ResponseEntity.badRequest().body(Map.of("success", false));
-        }
+        SepayWebhookRequest payload;
         try {
             payload = MAPPER.readValue(rawBody, SepayWebhookRequest.class);
         } catch (JacksonException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false));
+        }
+        if (payload.id() == null || payload.transferAmount() == null) {
             return ResponseEntity.badRequest().body(Map.of("success", false));
         }
         sepayWebhookService.handle(payload);
