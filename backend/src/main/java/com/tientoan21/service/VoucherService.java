@@ -82,6 +82,22 @@ public class VoucherService {
         return discountAmount;
     }
 
+    /** Giữ một lượt dùng voucher ngay (đơn COD); ném lỗi nếu đã hết lượt. */
+    @Transactional
+    public void consumeVoucher(String code) {
+        if (voucherRepository.incrementUsedCount(code) == 0) {
+            throw new AppException(ErrorCode.VOUCHER_OUT_OF_STOCK);
+        }
+    }
+
+    /** Trả lại một lượt dùng khi đơn đã tính lượt bị hủy. */
+    @Transactional
+    public void releaseVoucher(String code) {
+        if (code != null) {
+            voucherRepository.decrementUsedCount(code);
+        }
+    }
+
     @Transactional
     public void subtractionVoucher(String orderCode){
         Order order = orderRepository.findByOrderNumber(orderCode)

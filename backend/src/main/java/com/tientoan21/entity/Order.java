@@ -15,7 +15,10 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+        // job hủy đơn hết hạn lọc theo status + created_at
+        @Index(name = "idx_orders_status_created_at", columnList = "status, created_at")
+})
 public class Order extends BaseEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

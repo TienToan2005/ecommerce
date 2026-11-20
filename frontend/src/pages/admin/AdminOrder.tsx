@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Eye, CheckCircle2, Clock, Truck, Package, XCircle, Loader2, ClipboardList, RefreshCw } from 'lucide-react';
 import { formatCurrency } from '../../utils/format';
+import { orderPayableAmount } from '../../utils/order';
 import toast from 'react-hot-toast';
 import { getAllOrdersAdmin, updateOrderStatusAdmin } from '../../services/admin/order';
 import type { OrderResponse } from '../../types/order';
@@ -131,7 +132,7 @@ const AdminOrder: React.FC = () => {
               <tbody>
                 {orders.map((order) => {
                   const customerName = order.createdBy || 'Khách vãng lai';
-                  const totalAmount = Number(order.totalPrice);
+                  const totalAmount = orderPayableAmount(order);
 
                   return (
                     <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50/70 transition duration-150">

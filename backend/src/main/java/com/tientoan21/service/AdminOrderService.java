@@ -19,12 +19,17 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
+import java.util.Map;
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 
 public class AdminOrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
+    private final OrderService orderService;
 
     public Page<OrderResponse> getAllOrders(String search, String status, Pageable pageable) {
         Pageable customPageable = PageRequest.of(
@@ -48,21 +53,55 @@ public class AdminOrderService {
 
         return orderPage.map(orderMapper::toOrderResponse);
     }
+    /** Các bước chuyển trạng thái admin được phép làm. */
+    private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED = Map.of(
+            OrderStatus.PENDING, EnumSet.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
+            OrderStatus.CONFIRMED, EnumSet.of(OrderStatus.SHIPPED, OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED, EnumSet.of(OrderStatus.DELIVERED, OrderStatus.RETURNED),
+            OrderStatus.DELIVERED, EnumSet.of(OrderStatus.RETURNED),
+            OrderStatus.CANCELLED, EnumSet.noneOf(OrderStatus.class),
+            OrderStatus.RETURNED, EnumSet.noneOf(OrderStatus.class)
+    );
+
     @Transactional
     public OrderResponse updateOrderStatus(Long id, String status){
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
         if (status == null) {
             throw new IllegalArgumentException("OrderStatus is required");
         }
-        OrderStatus statusEnum = OrderStatus.valueOf(status.toUpperCase());
-        order.setStatus(statusEnum);
-
-        if (statusEnum == OrderStatus.DELIVERED && order.getPayment().getMethod() == PaymentMethod.COD) {
-            order.getPayment().setStatus(PaymentStatus.COMPLETED);
+        OrderStatus target;
+        try {
+            target = OrderStatus.valueOf(status.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Trạng thái không hợp lệ: " + status);
         }
 
-        Order updatedOrder = orderRepository.save(order);
-        return orderMapper.toOrderResponse(updatedOrder);
+        // Khóa đơn để không đua với webhook / job hủy đơn
+        Order order = orderRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
+        OrderStatus current = order.getStatus();
+        if (current == target) {
+            return orderMapper.toOrderResponse(order);
+        }
+        if (!ALLOWED.getOrDefault(current, Set.of()).contains(target)) {
+            throw new IllegalArgumentException("Không thể chuyển đơn từ " + current + " sang " + target);
+        }
+
+        boolean cod = order.getPayment() != null && order.getPayment().getMethod() == PaymentMethod.COD;
+        boolean paid = order.getPayment() != null && order.getPayment().getStatus() == PaymentStatus.COMPLETED;
+        if (target == OrderStatus.CONFIRMED && !cod && !paid) {
+            throw new IllegalArgumentException("Đơn thanh toán online chưa nhận được tiền, không thể xác nhận");
+        }
+
+        if (target == OrderStatus.CANCELLED || target == OrderStatus.RETURNED) {
+            // Hoàn kho, trả lượt voucher, báo hoàn tiền nếu đã thu
+            orderService.closeOrder(order, target);
+        } else {
+            order.setStatus(target);
+            if (target == OrderStatus.DELIVERED && cod) {
+                order.getPayment().setStatus(PaymentStatus.COMPLETED);
+            }
+        }
+
+        return orderMapper.toOrderResponse(orderRepository.save(order));
     }
 }

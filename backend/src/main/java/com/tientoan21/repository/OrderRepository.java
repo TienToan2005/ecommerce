@@ -33,12 +33,12 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                                     @Param("productId") Long productId,
                                     @Param("status") OrderStatus status);
 
-    @Query("select sum(o.totalPrice) from Order o where o.status = 'DELIVERED' ")
+    @Query("select sum(coalesce(o.grandTotal, o.totalPrice)) from Order o where o.status = 'DELIVERED' ")
     BigDecimal calculateTotalRevenue();
 
     long countByStatus(OrderStatus status);
 
-    @Query("SELECT MONTH(o.createdAt) as month, SUM(o.totalPrice) as revenue " +
+    @Query("SELECT MONTH(o.createdAt) as month, SUM(coalesce(o.grandTotal, o.totalPrice)) as revenue " +
             "FROM Order o " +
             "WHERE YEAR(o.createdAt) = :year AND o.status = 'DELIVERED' " +
             "GROUP BY MONTH(o.createdAt) " +
@@ -63,6 +63,14 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     List<Order> findExpiredForUpdate(@Param("status") OrderStatus status,
                                      @Param("before") LocalDateTime before,
                                      @Param("methods") Collection<PaymentMethod> methods);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.orderNumber = :orderNumber")
+    Optional<Order> findByOrderNumberForUpdate(@Param("orderNumber") String orderNumber);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.id = :id")
+    Optional<Order> findByIdForUpdate(@Param("id") Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Order> findByPaymentCode(String paymentCode);

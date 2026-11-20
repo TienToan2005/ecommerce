@@ -15,7 +15,11 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     Optional<Voucher> findByCode(String code);
 
     /** Tăng lượt dùng nguyên tử; trả về 0 nếu voucher đã hết lượt. */
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true) // không clear: clear sẽ vứt các thay đổi chưa flush của đơn trong cùng transaction
     @Query("update Voucher v set v.usedCount = v.usedCount + 1 where v.code = :code and v.usedCount < v.usageLimit")
     int incrementUsedCount(@Param("code") String code);
+
+    @Modifying(flushAutomatically = true) // không clear: clear sẽ vứt các thay đổi chưa flush của đơn trong cùng transaction
+    @Query("update Voucher v set v.usedCount = v.usedCount - 1 where v.code = :code and v.usedCount > 0")
+    int decrementUsedCount(@Param("code") String code);
 }

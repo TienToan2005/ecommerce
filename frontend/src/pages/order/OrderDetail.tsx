@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import * as orderApi from '../../services/order';
 import type { OrderResponse } from '../../types/order';
 import { formatCurrency } from '../../utils/format';
+import { canResumeSepayPayment, orderPayableAmount } from '../../utils/order';
 import toast from 'react-hot-toast';
 import { ChevronLeft, Package, Clock, CheckCircle2, XCircle, Truck, MapPin, CreditCard, Receipt } from 'lucide-react';
 
@@ -108,6 +109,14 @@ const OrderDetail: React.FC = () => {
                     <span className="text-yellow-600 font-bold bg-yellow-50 px-2 py-0.5 rounded">Chưa thanh toán</span>
                   )}
                 </p>
+                {canResumeSepayPayment(order) && (
+                  <Link
+                    to={`/payment/sepay/${order.id}`}
+                    className="inline-block mt-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition"
+                  >
+                    Tiếp tục thanh toán (quét mã QR)
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -146,13 +155,19 @@ const OrderDetail: React.FC = () => {
                 <span>Tạm tính:</span>
                 <span>{formatCurrency(Number(order.totalPrice))}</span>
               </div>
+              {order.voucherDiscount && Number(order.voucherDiscount) > 0 && (
+                <div className="flex justify-between text-emerald-700">
+                  <span>Voucher{order.voucherCode ? ` (${order.voucherCode})` : ''}:</span>
+                  <span>-{formatCurrency(Number(order.voucherDiscount))}</span>
+                </div>
+              )}
               <div className="flex justify-between text-gray-600">
                 <span>Phí vận chuyển:</span>
                 <span>0 ₫</span>
               </div>
               <div className="flex justify-between items-center pt-3 border-t border-gray-200">
                 <span className="font-bold text-gray-800">Tổng cộng:</span>
-                <span className="text-2xl font-black text-red-600">{formatCurrency(Number(order.totalPrice))}</span>
+                <span className="text-2xl font-black text-red-600">{formatCurrency(orderPayableAmount(order))}</span>
               </div>
             </div>
           </div>

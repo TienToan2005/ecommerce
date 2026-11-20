@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import * as orderApi from '../../services/order';
 import type { OrderResponse } from '../../types/order';
 import { formatCurrency } from '../../utils/format';
+import { canResumeSepayPayment, orderPayableAmount } from '../../utils/order';
 import { useAuthStore } from '../../hooks/useAuthStore';
 import toast from 'react-hot-toast';
 import { Package, Clock, CheckCircle2, XCircle, Truck, ChevronRight } from 'lucide-react';
@@ -141,7 +142,7 @@ const OrderHistory: React.FC = () => {
                   <div className="flex flex-col items-end gap-3 w-full sm:w-auto">
                     <div className="flex items-center gap-2">
                       <span className="text-gray-600">Thành tiền:</span>
-                      <span className="text-2xl font-bold text-red-600">{formatCurrency(Number(order.totalPrice))}</span>
+                      <span className="text-2xl font-bold text-red-600">{formatCurrency(orderPayableAmount(order))}</span>
                     </div>
                     
                     <div className="flex gap-2 w-full sm:w-auto">
@@ -153,6 +154,11 @@ const OrderHistory: React.FC = () => {
                         >
                           {cancelingId === order.id ? 'Đang xử lý...' : 'Hủy đơn hàng'}
                         </button>
+                      )}
+                      {canResumeSepayPayment(order) && (
+                        <Link to={`/payment/sepay/${order.id}`} className="flex-1 sm:flex-none bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-emerald-700 transition text-center">
+                          Tiếp tục thanh toán
+                        </Link>
                       )}
                       <Link to={`/order-history/${order.id}`} className="flex-1 sm:flex-none bg-red-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-red-700 transition text-center flex items-center justify-center gap-1">
                         Xem chi tiết <ChevronRight size={16}/>

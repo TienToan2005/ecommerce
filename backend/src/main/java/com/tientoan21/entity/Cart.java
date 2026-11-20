@@ -3,6 +3,7 @@ package com.tientoan21.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,5 +24,5 @@ public class Cart extends BaseEntity {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private List<CartItem> cartItemList;
+    private List<CartItem> cartItemList = new ArrayList<>();
 }

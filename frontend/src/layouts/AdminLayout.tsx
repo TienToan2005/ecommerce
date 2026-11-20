@@ -35,17 +35,22 @@ const AdminLayout: React.FC = () => {
     if (!isAuthenticated || user?.role !== 'ADMIN') return;
 
     let radarSubscription: StompSubscription | null = null;
-    const socket = new SockJS('http://localhost:8080/ws');
-    
     const stompClient = new Client({
-      webSocketFactory: () => socket,
+      // Tạo socket mới mỗi lần (kể cả khi reconnect); socket cũ đã đóng thì không dùng lại được
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
       reconnectDelay: 5000,
+      // Backend chỉ cho admin đã xác thực nghe /topic/admin-notifications
+      beforeConnect: () => {
+        const token = useAuthStore.getState().accessToken;
+        stompClient.connectHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+      },
       
       onConnect: () => {
         console.log('✅ Đã kết nối hệ thống Radar bắt đơn hàng!');
         
         radarSubscription = stompClient.subscribe('/topic/admin-notifications', (message) => {
-          if(message.body.includes("TING_TING")) {
+          {
+            // Hiện mọi thông báo admin (đơn mới, tiền về, cần hoàn tiền), bỏ tiền tố TING_TING nếu có
             const notificationText = message.body.replace("TING_TING: ", "");
             
             setNotifications(prev => [notificationText, ...prev]);

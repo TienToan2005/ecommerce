@@ -5,18 +5,22 @@ import toast from 'react-hot-toast';
 import * as orderApi from '../../services/order';
 import type { OrderResponse } from '../../types/order';
 import { formatCurrency } from '../../utils/format';
+import PaymentCountdown from '../../components/PaymentCountdown';
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_CONSECUTIVE_ERRORS = 5;
 
-const SepayPayment: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const orderId = Number(id);
+const SepayPayment: React.FC<{ orderId: number }> = ({ orderId }) => {
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
   const [pollingStopped, setPollingStopped] = useState(false);
   const notifiedPaid = useRef(false);
+  const [isExpired, setIsExpired] = useState(false);
+  // Giờ máy chủ - giờ máy khách; giữ mẫu đo có thời gian mạng (RTT) nhỏ nhất
+  const [clockOffsetMs, setClockOffsetMs] = useState<number | null>(null);
+  const bestRttMs = useRef(Number.POSITIVE_INFINITY);
+  const offsetRef = useRef<number | null>(null);
 
   const isPaid = order?.paymentInfo?.status === 'COMPLETED' || order?.status === 'CONFIRMED';
   const isCancelled = order?.status === 'CANCELLED';
@@ -35,9 +39,28 @@ const SepayPayment: React.FC = () => {
       if (inFlight) return; // bỏ lượt nếu lời gọi trước chưa xong
       inFlight = true;
       try {
+        const sentAt = Date.now();
         const data = await orderApi.getOrderById(orderId);
+        const receivedAt = Date.now();
         errorCount = 0;
         if (!stopped) {
+          const serverTime = data.paymentInfo?.serverTime ? Date.parse(data.paymentInfo.serverTime) : NaN;
+          const rtt = receivedAt - sentAt;
+          if (!Number.isNaN(serverTime)) {
+            // Giả định máy chủ tạo serverTime ở giữa lượt đi và về
+            const implied = serverTime - (sentAt + rtt / 2);
+            const current = offsetRef.current;
+            // Nhận mẫu mới nếu mạng nhanh hơn, hoặc nếu lệch quá sai số của mẫu (đồng hồ máy vừa bị chỉnh)
+            if (current === null || rtt < bestRttMs.current || Math.abs(implied - current) > rtt / 2 + 2000) {
+              bestRttMs.current = rtt;
+              offsetRef.current = implied;
+              setClockOffsetMs(implied);
+            }
+          } else if (offsetRef.current === null) {
+            // Không có serverTime: vẫn đếm ngược theo đồng hồ máy khách
+            offsetRef.current = 0;
+            setClockOffsetMs(0);
+          }
           setOrder(data);
           setLoadFailed(false);
         }
@@ -144,7 +167,12 @@ const SepayPayment: React.FC = () => {
 
         <div className="bg-white rounded-2xl shadow-sm p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="flex flex-col items-center">
-            {payment?.qrUrl ? (
+            {isExpired ? (
+              <div className="w-64 h-64 flex flex-col items-center justify-center text-center text-sm text-gray-500 border border-dashed rounded-xl p-4">
+                <QrCode size={40} className="mb-2 text-gray-300" />
+                Mã QR đã hết hạn
+              </div>
+            ) : payment?.qrUrl ? (
               <img
                 src={payment.qrUrl}
                 alt="Mã QR thanh toán"
@@ -173,6 +201,13 @@ const SepayPayment: React.FC = () => {
           </div>
 
           <div className="space-y-4 text-sm">
+            {payment?.expiresAt && clockOffsetMs !== null && (
+              <PaymentCountdown
+                expiresAt={payment.expiresAt}
+                clockOffsetMs={clockOffsetMs}
+                onExpire={() => setIsExpired(true)}
+              />
+            )}
             <div>
               <p className="text-gray-500">Mã đơn hàng</p>
               <p className="font-bold text-gray-800">{order.orderNumber}</p>
@@ -203,4 +238,10 @@ const SepayPayment: React.FC = () => {
   );
 };
 
-export default SepayPayment;
+/** Gắn key theo id để sang đơn khác thì trang được tạo mới, không mang trạng thái của đơn cũ. */
+const SepayPaymentRoute: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  return <SepayPayment key={id} orderId={Number(id)} />;
+};
+
+export default SepayPaymentRoute;

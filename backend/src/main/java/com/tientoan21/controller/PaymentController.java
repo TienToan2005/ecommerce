@@ -4,6 +4,8 @@ import com.tientoan21.config.SepaySignatureVerifier;
 import com.tientoan21.dto.request.SepayWebhookRequest;
 import com.tientoan21.dto.response.ApiResponse;
 import com.tientoan21.entity.Order;
+import com.tientoan21.enums.OrderStatus;
+import com.tientoan21.enums.PaymentMethod;
 import com.tientoan21.service.OrderService;
 import com.tientoan21.service.PaymentService;
 import com.tientoan21.service.SepayWebhookService;
@@ -32,7 +34,11 @@ public class PaymentController {
     @PostMapping("/create-payment")
     public ApiResponse<String> createPayment(@RequestParam String orderNumber, HttpServletRequest request) {
 
-        Order order = orderService.getOrderByNumber(orderNumber);
+        Order order = orderService.getOwnedOrderByNumber(orderNumber);
+        if (order.getStatus() != OrderStatus.PENDING || order.getPayment() == null
+                || order.getPayment().getMethod() != PaymentMethod.VNPAY) {
+            throw new IllegalArgumentException("Đơn không ở trạng thái chờ thanh toán VNPay");
+        }
 
         String vnpayUrl = paymentService.createVnPayPaymentUrl(order, request);
         return ApiResponse.<String>builder()

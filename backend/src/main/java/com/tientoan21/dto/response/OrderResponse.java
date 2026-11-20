@@ -15,6 +15,10 @@ public class OrderResponse {
     private Long id;
     private String orderNumber;
     private BigDecimal totalPrice;
+    private String voucherCode;
+    private BigDecimal voucherDiscount;
+    /** Số tiền khách phải trả (sau voucher). */
+    private BigDecimal grandTotal;
     private AddressResponse deliveryAddress;
     private List<OrderItemResponse> orderItems;
     private PaymentResponse paymentInfo;

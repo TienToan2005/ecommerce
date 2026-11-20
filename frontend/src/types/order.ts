@@ -14,6 +14,9 @@ export interface OrderResponse {
   userId: number;
   orderNumber: string;
   totalPrice: string;
+  voucherCode?: string;
+  voucherDiscount?: string;
+  grandTotal?: string;
   deliveryAddress: AddressResponse;
   orderItems: OrderItemResponse[];
   paymentInfo: PaymentResponse;

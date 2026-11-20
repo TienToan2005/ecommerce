@@ -21,6 +21,7 @@ public class PaymentService {
     private final VNPayConfig vnPayConfig;
     private final OrderService orderService;
     private final VoucherService voucherService;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     // --- LOGIC 1: TẠO LINK THANH TOÁN ---
     public String createVnPayPaymentUrl(Order order, HttpServletRequest request) {
@@ -109,8 +110,21 @@ public class PaymentService {
 
             if ("00".equals(responseCode)) {
                 boolean changed = orderService.updatePaymentStatus(orderCode, PaymentStatus.COMPLETED);
-                if (changed) voucherService.subtractionVoucher(orderCode);
-                return ApiResponse.builder().data("Thanh toán thành công").build();
+                if (changed) {
+                    voucherService.subtractionVoucher(orderCode);
+                    return ApiResponse.builder().data("Thanh toán thành công").build();
+                }
+                Order order = orderService.getOrderByNumber(orderCode);
+                if (order.getPayment() != null && order.getPayment().getStatus() == PaymentStatus.COMPLETED) {
+                    // VNPay gọi lại lần hai cho đơn đã xác nhận
+                    return ApiResponse.builder().data("Thanh toán thành công").build();
+                }
+                // Tiền đã trừ nhưng đơn đã bị hủy (quá hạn): báo admin hoàn tiền
+                eventPublisher.publishEvent(new AdminAlertEvent("VNPAY: đơn " + orderCode + " đang ở trạng thái "
+                        + order.getStatus() + " nhưng khách vừa thanh toán thành công, cần hoàn tiền"));
+                return ApiResponse.builder()
+                        .data("Đơn hàng đã bị hủy trước khi thanh toán hoàn tất. Cửa hàng sẽ liên hệ để hoàn tiền cho bạn.")
+                        .build();
             } else {
                 boolean changed = orderService.updatePaymentStatus(orderCode, PaymentStatus.FAILED);
                 if (!changed) log.info("Bỏ qua kết quả thất bại của VNPay: đơn {} không còn ở trạng thái PENDING", orderCode);

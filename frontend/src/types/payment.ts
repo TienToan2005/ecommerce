@@ -6,4 +6,6 @@ export interface PaymentResponse {
   paymentUrl?: string;
   paymentCode?: string;
   qrUrl?: string;
+  expiresAt?: string;
+  serverTime?: string;
 }

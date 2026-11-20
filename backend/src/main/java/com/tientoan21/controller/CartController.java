@@ -45,7 +45,7 @@ public class CartController {
                 .data("Đã xóa giỏ hàng thành công")
                 .build();
     }
-    @DeleteMapping("/items")
+    @DeleteMapping("/items/{cartItemId}")
     public ApiResponse<String> deleteCartItem(@PathVariable Long cartItemId){
         cartService.deleteCartItem(cartItemId);
         return ApiResponse.<String>builder()
