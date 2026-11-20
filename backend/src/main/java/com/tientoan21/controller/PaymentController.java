@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Map;
@@ -48,15 +49,17 @@ public class PaymentController {
             @RequestBody byte[] rawBody,
             @RequestHeader(value = "X-SePay-Timestamp", required = false) String timestamp,
             @RequestHeader(value = "X-SePay-Signature", required = false) String signature) {
-
         if (!verifier.verify(timestamp, signature, rawBody)) {
             return ResponseEntity.status(401).body(Map.of("success", false));
         }
 
-        SepayWebhookRequest payload;
+        SepayWebhookRequest payload = null;
+        if (payload.id() == null || payload.transferAmount() == null) {
+            return ResponseEntity.badRequest().body(Map.of("success", false));
+        }
         try {
             payload = MAPPER.readValue(rawBody, SepayWebhookRequest.class);
-        } catch (tools.jackson.core.JacksonException e) {
+        } catch (JacksonException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false));
         }
         sepayWebhookService.handle(payload);

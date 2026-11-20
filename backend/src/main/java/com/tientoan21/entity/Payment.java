@@ -21,8 +21,10 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     private PaymentMethod method;
     private BigDecimal amount;
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
     @OneToOne(fetch = FetchType.LAZY)

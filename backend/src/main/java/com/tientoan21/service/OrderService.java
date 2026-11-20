@@ -1,6 +1,7 @@
 package com.tientoan21.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
@@ -83,7 +84,7 @@ public class OrderService {
         if (request.voucherCode() != null && !request.voucherCode().trim().isEmpty()) {
             VoucherResponse checkRes = voucherService.checkVoucher(request.voucherCode().trim(), totalPrice);
 
-            voucherDiscount = checkRes.getCalculatedDiscount();
+            voucherDiscount = checkRes.getCalculatedDiscount().setScale(0, RoundingMode.HALF_UP);
             grandTotal = totalPrice.subtract(voucherDiscount);
 
             order.setVoucherCode(request.voucherCode().trim());

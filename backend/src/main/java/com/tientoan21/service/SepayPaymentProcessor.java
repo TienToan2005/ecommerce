@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -70,8 +71,7 @@ public class SepayPaymentProcessor {
                 .result(result)
                 .content(request.content())
                 .transferType(request.transferType())
-                .transactionDate(request.transactionDate() == null ? null
-                : LocalDateTime.parse(request.transactionDate(), DATE_FORMAT))
+                .transactionDate(parseDate(request.transactionDate()))
                 .referenceCode(request.referenceCode())
                 .build();
 
@@ -79,10 +79,20 @@ public class SepayPaymentProcessor {
         return result;
     }
     private String extractCode(SepayWebhookRequest p) {
-        if (p.code() != null && !p.code().isBlank())  return p.code().trim().toUpperCase();
-        if (p.content() == null)  return null;
-        Matcher m = CODE_PATTERN.matcher(p.content());
-        if (m.find())  return m.group().toUpperCase();
+        if (p.code() != null) { String c = p.code().trim().toUpperCase();
+           if (CODE_PATTERN.matcher(c).matches()) return c;
+        }
+        if (p.content() == null) return null;
+        Matcher m = CODE_PATTERN.matcher(p.content()); if (m.find()) return m.group().toUpperCase();
         return null;
+    }
+    private LocalDateTime parseDate(String s){
+        if(s == null) return null;
+        try {
+            return LocalDateTime.parse(s, DATE_FORMAT);
+        } catch (DateTimeParseException e) {
+            log.warn("Sai định dạng ngày: {}", s);
+            return null;
+        }
     }
 }
