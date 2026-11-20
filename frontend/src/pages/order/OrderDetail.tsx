@@ -34,7 +34,8 @@ const OrderDetail: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'PENDING': return <span className="flex items-center gap-1 text-yellow-600 bg-yellow-50 px-3 py-1.5 rounded-full text-sm font-medium"><Clock size={16}/> Chờ xác nhận</span>;
-      case 'PROCESSING': return <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full text-sm font-medium"><Package size={16}/> Đang chuẩn bị hàng</span>;
+      case 'CONFIRMED': return <span className="flex items-center gap-1 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full text-sm font-medium"><CheckCircle2 size={16}/> Đã xác nhận</span>;
+      case 'RETURNED': return <span className="flex items-center gap-1 text-orange-600 bg-orange-50 px-3 py-1.5 rounded-full text-sm font-medium"><Package size={16}/> Đã hoàn trả</span>;
       case 'SHIPPED': return <span className="flex items-center gap-1 text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full text-sm font-medium"><Truck size={16}/> Đang giao hàng</span>;
       case 'DELIVERED':
       case 'COMPLETED': return <span className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-sm font-medium"><CheckCircle2 size={16}/> Đã giao hàng</span>;

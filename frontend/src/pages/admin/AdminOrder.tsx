@@ -34,12 +34,6 @@ const AdminOrder: React.FC = () => {
     fetchOrders();
   }, [statusFilter]);
 
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      fetchOrders();
-    }
-  };
-
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     if (!window.confirm('Xác nhận cập nhật trạng thái đơn hàng này?')) return;
 
@@ -59,8 +53,8 @@ const AdminOrder: React.FC = () => {
         return <span className="flex items-center justify-center gap-1.5 text-yellow-700 bg-yellow-50 border border-yellow-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Clock size={14}/> Chờ xác nhận</span>;
       case 'CONFIRMED': 
         return <span className="flex items-center justify-center gap-1.5 text-blue-700 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><CheckCircle2 size={14}/> Đã xác nhận</span>;
-      case 'PROCESSING': 
-        return <span className="flex items-center justify-center gap-1.5 text-orange-700 bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Package size={14}/> Chuẩn bị hàng</span>;
+      case 'RETURNED': 
+        return <span className="flex items-center justify-center gap-1.5 text-orange-700 bg-orange-50 border border-orange-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Package size={14}/> Đã hoàn trả</span>;
       case 'SHIPPED': 
         return <span className="flex items-center justify-center gap-1.5 text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-md text-xs font-bold w-full"><Truck size={14}/> Đang giao</span>;
       case 'DELIVERED': 
@@ -90,10 +84,10 @@ const AdminOrder: React.FC = () => {
             <option value="">Tất cả trạng thái</option>
             <option value="PENDING">Chờ xác nhận</option>
             <option value="CONFIRMED">Đã xác nhận</option>
-            <option value="PROCESSING">Chuẩn bị hàng</option>
             <option value="SHIPPED">Đang giao</option>
             <option value="DELIVERED">Đã giao</option>
             <option value="CANCELLED">Đã hủy</option>
+            <option value="RETURNED">Đã hoàn trả</option>
           </select>
 
           {/* Ô tìm kiếm */}
@@ -161,10 +155,10 @@ const AdminOrder: React.FC = () => {
                         >
                           <option value="PENDING">Chờ xác nhận</option>
                           <option value="CONFIRMED">Đã xác nhận</option>
-                          <option value="PROCESSING">Chuẩn bị hàng</option>
                           <option value="SHIPPED">Đang giao</option>
                           <option value="DELIVERED">Đã giao</option>
                           <option value="CANCELLED">Hủy đơn</option>
+                          <option value="RETURNED">Đã hoàn trả</option>
                         </select>
                         {getStatusBadge(order.status)}
                       </td>

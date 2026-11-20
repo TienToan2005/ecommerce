@@ -17,7 +17,7 @@ export interface OrderResponse {
   deliveryAddress: AddressResponse;
   orderItems: OrderItemResponse[];
   paymentInfo: PaymentResponse;
-  status: 'PENDING' | 'CONFIRMED' | 'PROCESSING' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED';
+  status: 'PENDING' | 'CONFIRMED' | 'SHIPPED' | 'DELIVERED' | 'CANCELLED' | 'RETURNED';
   createdAt: string;
   createdBy: string;
 }

@@ -7,6 +7,7 @@ import type { OrderResponse } from '../../types/order';
 import { formatCurrency } from '../../utils/format';
 
 const POLL_INTERVAL_MS = 3000;
+const MAX_CONSECUTIVE_ERRORS = 5;
 
 const SepayPayment: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ const SepayPayment: React.FC = () => {
 
   const [order, setOrder] = useState<OrderResponse | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [pollingStopped, setPollingStopped] = useState(false);
   const notifiedPaid = useRef(false);
 
   const isPaid = order?.paymentInfo?.status === 'COMPLETED' || order?.status === 'CONFIRMED';
@@ -24,16 +26,30 @@ const SepayPayment: React.FC = () => {
   useEffect(() => {
     if (!orderId) return;
     let stopped = false;
+    let inFlight = false;
+    let errorCount = 0;
+    let timer: number | undefined;
+    setPollingStopped(false);
 
     const fetchOrder = async () => {
+      if (inFlight) return; // bỏ lượt nếu lời gọi trước chưa xong
+      inFlight = true;
       try {
         const data = await orderApi.getOrderById(orderId);
+        errorCount = 0;
         if (!stopped) {
           setOrder(data);
           setLoadFailed(false);
         }
       } catch {
+        errorCount += 1;
         if (!stopped) setLoadFailed(true);
+        if (errorCount >= MAX_CONSECUTIVE_ERRORS && timer !== undefined) {
+          window.clearInterval(timer); // lỗi liên tiếp: dừng hỏi
+          if (!stopped) setPollingStopped(true);
+        }
+      } finally {
+        inFlight = false;
       }
     };
 
@@ -41,10 +57,10 @@ const SepayPayment: React.FC = () => {
     if (isFinished) {
       return () => { stopped = true; };
     }
-    const timer = window.setInterval(fetchOrder, POLL_INTERVAL_MS);
+    timer = window.setInterval(fetchOrder, POLL_INTERVAL_MS);
     return () => {
       stopped = true;
-      window.clearInterval(timer);
+      if (timer !== undefined) window.clearInterval(timer);
     };
   }, [orderId, isFinished]);
 
@@ -142,8 +158,17 @@ const SepayPayment: React.FC = () => {
             )}
             <p className="text-sm text-gray-500 mt-4 text-center">Mở app ngân hàng và quét mã để chuyển khoản</p>
             <div className="flex items-center gap-2 mt-3 text-sm text-gray-600">
-              <Loader className="animate-spin text-red-600" size={16} />
-              Đang chờ thanh toán...
+              {pollingStopped ? (
+                <span className="text-amber-600">
+                  Mất kết nối tới máy chủ, trang đã ngừng cập nhật.{' '}
+                  <button type="button" onClick={() => window.location.reload()} className="underline font-medium">Tải lại</button>
+                </span>
+              ) : (
+                <>
+                  <Loader className="animate-spin text-red-600" size={16} />
+                  Đang chờ thanh toán...
+                </>
+              )}
             </div>
           </div>
 
