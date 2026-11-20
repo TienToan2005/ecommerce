@@ -19,14 +19,19 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
 import java.security.Principal;
+import java.util.Set;
 
 @Configuration
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 @Slf4j
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-    /** Các topic chỉ admin được nghe (thông báo đơn hàng, tiền về, hoàn tiền). */
-    private static final String ADMIN_TOPIC_PREFIX = "/topic/admin";
+    /**
+     * Danh sách đích được phép SUBSCRIBE, so khớp chính xác (không theo tiền tố).
+     * Simple broker so khớp theo mẫu AntPath, nên "/topic/**" cũng nhận được tin admin;
+     * vì vậy mọi đích không có trong danh sách (kể cả đích chứa ký tự mẫu) đều bị từ chối.
+     */
+    private static final Set<String> ADMIN_DESTINATIONS = Set.of("/topic/admin-notifications");
 
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
@@ -55,10 +60,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     return message;
                 }
                 if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-                    accessor.setUser(authenticate(accessor.getFirstNativeHeader("Authorization")));
+                    Principal user = authenticate(accessor.getFirstNativeHeader("Authorization"));
+                    if (user == null) {
+                        // Hiện chỉ trang admin dùng WebSocket: không cho kết nối ẩn danh
+                        throw new MessagingException("Cần đăng nhập để kết nối WebSocket");
+                    }
+                    accessor.setUser(user);
                 } else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
                     String destination = accessor.getDestination();
-                    if (destination != null && destination.startsWith(ADMIN_TOPIC_PREFIX) && !isAdmin(accessor.getUser())) {
+                    if (destination == null || !ADMIN_DESTINATIONS.contains(destination)) {
+                        throw new MessagingException("Không được đăng ký đích " + destination);
+                    }
+                    if (!isAdmin(accessor.getUser())) {
                         throw new MessagingException("Chỉ admin được nghe " + destination);
                     }
                 }
