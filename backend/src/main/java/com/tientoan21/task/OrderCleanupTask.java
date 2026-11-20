@@ -4,6 +4,10 @@ import com.tientoan21.entity.Order;
 import com.tientoan21.entity.OrderItem;
 import com.tientoan21.entity.ProductVariant;
 import com.tientoan21.enums.OrderStatus;
+import com.tientoan21.enums.PaymentMethod;
+import com.tientoan21.repository.PaymentTransactionRepository;
+import com.tientoan21.service.AdminAlertEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import com.tientoan21.enums.PaymentStatus;
 import com.tientoan21.repository.OrderRepository;
 import com.tientoan21.repository.ProductVariantRepository;
@@ -22,20 +26,28 @@ import java.util.List;
 public class OrderCleanupTask {
     private final OrderRepository orderRepository;
     private final ProductVariantRepository productVariantRepository;
+    private final PaymentTransactionRepository transactionRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(fixedRate = 60000)
     @Transactional
     public void cancelExpiredOrders(){
         LocalDateTime fifteenMinutesAgo = LocalDateTime.now().minusMinutes(15);
 
-        List<Order> expiredOrders = orderRepository.findByStatusAndCreatedAtBefore(
-                OrderStatus.PENDING, fifteenMinutesAgo
+        // Chỉ hủy đơn thanh toán online; đơn COD chờ admin xác nhận. Khóa từng đơn để không đua với webhook.
+        List<Order> expiredOrders = orderRepository.findExpiredForUpdate(
+                OrderStatus.PENDING, fifteenMinutesAgo, List.of(PaymentMethod.SEPAY, PaymentMethod.VNPAY)
         );
 
         if(!expiredOrders.isEmpty()){
             log.info("Phát hiện {} đơn hàng quá thời gian thanh toán. Đang tiến hành hủy...", expiredOrders.size());
 
             for (Order order : expiredOrders){
+                long received = transactionRepository.sumReceived(order);
+                if (received > 0) {
+                    eventPublisher.publishEvent(new AdminAlertEvent("SEPAY: đơn " + order.getOrderNumber()
+                            + " bị hủy nhưng đã nhận " + received + "đ (trả thiếu), cần hoàn tiền"));
+                }
                 order.setStatus(OrderStatus.CANCELLED);
                 if(order.getPayment() != null){
                     order.getPayment().setStatus(PaymentStatus.FAILED);

@@ -20,6 +20,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Service
+@lombok.extern.slf4j.Slf4j
 @RequiredArgsConstructor
 public class VoucherService {
     private final VoucherRepository voucherRepository;
@@ -87,12 +88,8 @@ public class VoucherService {
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_FOUND));
 
         if(order.getVoucherCode() != null){
-            Voucher voucher = voucherRepository.findByCode(order.getVoucherCode())
-                    .orElseThrow(() -> new AppException(ErrorCode.VOUCHER_NOT_FOUND));
-
-            if (voucher.getUsedCount() < voucher.getUsageLimit()) {
-                voucher.setUsedCount(voucher.getUsedCount() + 1);
-                voucherRepository.save(voucher);
+            if (voucherRepository.incrementUsedCount(order.getVoucherCode()) == 0) {
+                log.warn("Voucher {} đã hết lượt nhưng đơn {} vẫn áp dụng", order.getVoucherCode(), orderCode);
             }
         }
     }

@@ -24,7 +24,7 @@ public class PaymentService {
 
     // --- LOGIC 1: TẠO LINK THANH TOÁN ---
     public String createVnPayPaymentUrl(Order order, HttpServletRequest request) {
-        long amount = order.getTotalPrice().longValue() * 100;
+        long amount = order.getGrandTotal().longValue() * 100;
 
         Map<String, String> vnp_Params = new HashMap<>();
         vnp_Params.put("vnp_Version", "2.1.0");

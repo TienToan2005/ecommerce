@@ -10,7 +10,7 @@ import com.tientoan21.repository.OrderRepository;
 import com.tientoan21.repository.PaymentTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +30,7 @@ public class SepayPaymentProcessor {
     private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final VoucherService voucherService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final ApplicationEventPublisher eventPublisher;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final Pattern CODE_PATTERN = Pattern.compile("TC[A-Z0-9]{8}", Pattern.CASE_INSENSITIVE);
 
@@ -53,27 +53,31 @@ public class SepayPaymentProcessor {
         }
         Order order = found.get();
         if(order.getStatus() != OrderStatus.PENDING){
+            long earlier = transactionRepository.sumReceived(order);
             return unapplied(request, order, code, SepayResult.ORDER_NOT_PENDING,
-                    "Đơn " + order.getOrderNumber() + " đang ở trạng thái " + order.getStatus() + ", không nhận thanh toán");
+                    "Đơn " + order.getOrderNumber() + " đang ở trạng thái " + order.getStatus() + ", không nhận thanh toán"
+                            + (earlier > 0 ? " (trước đó đã nhận " + earlier + "đ cho đơn này)" : ""));
         }
         long received = transactionRepository.sumReceived(order) + request.transferAmount();
         int cmp = BigDecimal.valueOf(received).compareTo(order.getGrandTotal());
-        if (cmp < 0)  return save(request, order, code, SepayResult.UNDERPAID, "Received " + received + " but " + order.getGrandTotal() +" is required. Please transfer an additional " + order.getGrandTotal().subtract(BigDecimal.valueOf(received)));
+        if (cmp < 0) {
+            return save(request, order, code, SepayResult.UNDERPAID, underpaidNote(received, order.getGrandTotal()));
+        }
 
         boolean changed = orderService.updatePaymentStatus(order.getOrderNumber(), PaymentStatus.COMPLETED);
         if (changed)  voucherService.subtractionVoucher(order.getOrderNumber());
-        return save(request, order, code, cmp == 0 ? SepayResult.PAID : SepayResult.PAID_OVERPAID, cmp == 0 ? "success" : "excess transaction");
+        return save(request, order, code, cmp == 0 ? SepayResult.PAID : SepayResult.PAID_OVERPAID, cmp == 0 ? "Đủ tiền" : "Thanh toán dư");
+    }
+
+    private String underpaidNote(long received, BigDecimal required) {
+        return "Đã nhận " + received + "đ / cần " + required + "đ, còn thiếu " + required.subtract(BigDecimal.valueOf(received)) + "đ";
     }
 
     /** Lưu giao dịch tiền đã về nhưng không áp được vào đơn nào, và báo cho admin xử lý (hoàn tiền/đối soát). */
     private SepayResult unapplied(SepayWebhookRequest request, Order order, String code, SepayResult result, String note) {
         SepayResult saved = save(request, order, code, result, note);
-        try {
-            messagingTemplate.convertAndSend("/topic/admin-notifications",
-                    "SEPAY: có khoản " + request.transferAmount() + "đ chưa áp dụng (giao dịch " + request.id() + "): " + note);
-        } catch (Exception e) {
-            log.warn("Không gửi được thông báo admin cho giao dịch {}: {}", request.id(), e.getMessage());
-        }
+        eventPublisher.publishEvent(new AdminAlertEvent(
+                "SEPAY: có khoản " + request.transferAmount() + "đ chưa áp dụng (giao dịch " + request.id() + "): " + note));
         return saved;
     }
 

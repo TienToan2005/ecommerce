@@ -2,6 +2,7 @@ package com.tientoan21.repository;
 
 import com.tientoan21.entity.Order;
 import com.tientoan21.enums.OrderStatus;
+import com.tientoan21.enums.PaymentMethod;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +57,12 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     Optional<Order> findByOrderNumber(String orderNumber);
 
     List<Order> findByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime createdAtBefore);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select o from Order o where o.status = :status and o.createdAt < :before and o.payment.method in :methods")
+    List<Order> findExpiredForUpdate(@Param("status") OrderStatus status,
+                                     @Param("before") LocalDateTime before,
+                                     @Param("methods") Collection<PaymentMethod> methods);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<Order> findByPaymentCode(String paymentCode);
